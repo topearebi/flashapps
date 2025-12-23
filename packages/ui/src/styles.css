@@ -1,0 +1,42 @@
+:root {
+  /* HSL Colors */
+  --primary-hue: 250;
+  --primary-color: hsl(var(--primary-hue), 80%, 60%);
+  --secondary-color: hsl(320, 80%, 60%);
+  --bg-dark: hsl(240, 10%, 10%);
+  --glass-bg: hsla(240, 10%, 15%, 0.6);
+  --glass-border: hsla(0, 0%, 100%, 0.1);
+  
+  --font-main: 'Inter', system-ui, sans-serif;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg-dark);
+  color: white;
+  font-family: var(--font-main);
+}
+
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
+}

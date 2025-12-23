@@ -1,0 +1,65 @@
+name: Deploy to GitHub Pages
+
+on:
+  # Runs on push to main
+  push:
+    branches: ["main"]
+  
+  # Allows manual run
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build All
+        run: pnpm build
+
+      - name: Consolidate Builds
+        run: |
+          mkdir -p dist
+          # Copy Portfolio (Root)
+          cp -r apps/portfolio/dist/* dist/
+          # Copy Other Apps (Sub-paths)
+          # mkdir -p dist/flashcards && cp -r apps/flashcards/dist/* dist/flashcards/
+          # mkdir -p dist/puzzle-solver && cp -r apps/puzzle-solver/dist/* dist/puzzle-solver/
+          
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: './dist'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
