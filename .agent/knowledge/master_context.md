@@ -26,6 +26,7 @@ This is a **Monorepo** hosting a portfolio of AI-enabled web applications.
 2. **Check Uniqueness**: Do not create duplicate components in `apps/` if they belong in `packages/ui`.
 3. **Build Integrity**: After editing code, run `pnpm build` to verify you didn't break the build graph.
 4. **Context Loading**: If you are confused about the state, read `.agent/knowledge/project_structure.md`.
+5. **New Project Rule**: NEVER start a new app without following `.agent/workflows/add_new_app.md`. Assessment First!
 
 ## Current State
 - Monorepo initialized.

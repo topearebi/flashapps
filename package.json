@@ -12,9 +12,12 @@
     "format": "prettier --write \"**/*.{ts,tsx,md,json}\""
   },
   "devDependencies": {
-    "turbo": "^1.10.0",
+    "eslint": "^8.0.0",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.26",
     "prettier": "^3.0.0",
-    "eslint": "^8.0.0"
+    "turbo": "^1.10.0"
   },
   "packageManager": "pnpm@9.0.0",
   "engines": {

@@ -18,9 +18,6 @@
             "persistent": true
         },
         "test": {
-            "dependsOn": [
-                "build"
-            ],
             "inputs": [
                 "src/**/*.tsx",
                 "src/**/*.ts",
