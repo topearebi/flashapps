@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Layout, Button, APIKeyModal } from '@tope/ui';
 import { getStoredKey, setStoredKey, createAIClient } from '@tope/utils';
 

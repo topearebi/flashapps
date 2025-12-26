@@ -1,4 +1,3 @@
-import React from 'react'
 import { Layout, Button } from '@tope/ui'
 
 function App() {
