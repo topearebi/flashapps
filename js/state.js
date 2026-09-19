@@ -1,18 +1,22 @@
 /**
- * js/state.js - Reactive State Store & Storage Abstraction
- * Manages localStorage synchronization, active pool derivation,
- * dynamic group/unit indexes, and weighted error updates.
+ * js/state.js - Reactive State Store & Manifest Ingestion Layer
+ * Handles:
+ *  - Dynamic asynchronous loading from data/manifest.json
+ *  - Schema version migration (clearing stale stub caches)
+ *  - Category hierarchy indexing with character tokens for visual previews
+ *  - Spaced repetition weighting and local persistence
  */
 
 export class Store extends EventTarget {
-  static STORAGE_KEY = "speedrecall_decks_v1";
+  static STORAGE_KEY = "speedrecall_state_v2";
+  static MANIFEST_PATH = "./data/manifest.json";
 
-  constructor(defaultDecks = {}) {
+  constructor() {
     super();
-    this.defaultDecks = defaultDecks;
     this.decks = {};
     this.currentDeckId = "";
-    this.activeMode = "pinyin-number";
+    this.activeMode = "standard";
+    this.schemaVersion = 2;
     
     // Set of active category keys: Set<"GroupName::UnitName">
     this.selectedUnits = new Set();
@@ -24,41 +28,89 @@ export class Store extends EventTarget {
       streak: 0
     };
 
-    this.loadState();
+    this.isInitialized = false;
   }
 
   /**
-   * Initializes storage from localStorage or falls back to baseline defaults
+   * Asynchronously bootstraps state: verifies versioning, ingests manifest if needed
    */
-  loadState() {
+  async init() {
     const raw = localStorage.getItem(Store.STORAGE_KEY);
+    let stateValid = false;
+
     if (raw) {
       try {
-        this.decks = JSON.parse(raw);
+        const parsed = JSON.parse(raw);
+        if (parsed.schemaVersion === this.schemaVersion && parsed.decks && Object.keys(parsed.decks).length > 0) {
+          this.decks = parsed.decks;
+          this.currentDeckId = parsed.currentDeckId || Object.keys(this.decks)[0];
+          this.activeMode = parsed.activeMode || "standard";
+          stateValid = true;
+        }
       } catch (err) {
-        console.warn("Storage corruption detected. Reverting to defaults.", err);
-        this.decks = structuredClone(this.defaultDecks);
+        console.warn("Storage corrupted or outdated. Reloading from manifest.", err);
       }
-    } else {
-      this.decks = structuredClone(this.defaultDecks);
-      this.saveState();
     }
 
-    const deckKeys = Object.keys(this.decks);
-    this.currentDeckId = deckKeys[0] || "";
-    
-    if (this.currentDeckId && this.decks[this.currentDeckId]) {
-      this.activeMode = this.decks[this.currentDeckId].defaultMode || "pinyin-number";
-      this.selectAllUnitsForCurrentDeck();
+    if (!stateValid) {
+      await this.loadFromManifest();
+    }
+
+    this.selectAllUnitsForCurrentDeck();
+    this.isInitialized = true;
+    this.dispatchEvent(new CustomEvent("initialized"));
+  }
+
+  /**
+   * Fetches data/manifest.json and loads all baseline JSON decks concurrently
+   */
+  async loadFromManifest() {
+    try {
+      const manifestRes = await fetch(Store.MANIFEST_PATH);
+      if (!manifestRes.ok) throw new Error(`HTTP ${manifestRes.status} loading manifest`);
+      const manifest = await manifestRes.json();
+
+      const loadedDecks = {};
+
+      await Promise.all(
+        manifest.decks.map(async (entry) => {
+          try {
+            const deckRes = await fetch(entry.file);
+            if (!deckRes.ok) throw new Error(`HTTP ${deckRes.status} loading ${entry.file}`);
+            const deckData = await deckRes.json();
+
+            loadedDecks[entry.id] = {
+              name: deckData.name || entry.name,
+              defaultMode: entry.defaultMode || "standard",
+              cards: deckData.cards || []
+            };
+          } catch (fetchErr) {
+            console.error(`Failed to ingest deck file: ${entry.file}`, fetchErr);
+          }
+        })
+      );
+
+      this.decks = loadedDecks;
+      this.currentDeckId = manifest.defaultDeckId || Object.keys(this.decks)[0] || "";
+      this.activeMode = this.decks[this.currentDeckId]?.defaultMode || "standard";
+      this.saveState();
+    } catch (err) {
+      console.error("Critical failure during manifest ingestion:", err);
     }
   }
 
   saveState() {
     try {
-      localStorage.setItem(Store.STORAGE_KEY, JSON.stringify(this.decks));
+      const payload = {
+        schemaVersion: this.schemaVersion,
+        currentDeckId: this.currentDeckId,
+        activeMode: this.activeMode,
+        decks: this.decks
+      };
+      localStorage.setItem(Store.STORAGE_KEY, JSON.stringify(payload));
       this.dispatchEvent(new CustomEvent("state-saved"));
     } catch (err) {
-      console.error("Failed to write to localStorage:", err);
+      console.error("Failed to write state to localStorage:", err);
     }
   }
 
@@ -69,48 +121,54 @@ export class Store extends EventTarget {
   setDeck(deckId) {
     if (!this.decks[deckId]) return;
     this.currentDeckId = deckId;
-    this.activeMode = this.decks[deckId].defaultMode || "pinyin-number";
+    this.activeMode = this.decks[deckId].defaultMode || "standard";
     this.resetStats();
     this.selectAllUnitsForCurrentDeck();
+    this.saveState();
     this.dispatchEvent(new CustomEvent("deck-changed", { detail: { deckId } }));
   }
 
   setMode(mode) {
     this.activeMode = mode;
+    this.saveState();
     this.dispatchEvent(new CustomEvent("mode-changed", { detail: { mode } }));
   }
 
   /**
-   * Builds an indexed map of Groups and Units for the current deck:
-   * Returns: { [group: string]: Array<string> }
+   * Builds an indexed map of Groups, Units, and constituent Character Tokens
+   * Returns: { [group: string]: { [unit: string]: Array<string> } }
    */
   getCategoryHierarchy() {
     const deck = this.getCurrentDeck();
     if (!deck || !Array.isArray(deck.cards)) return {};
 
     const hierarchy = {};
+
     for (const card of deck.cards) {
       const group = card.group || "General";
       const unit = card.unit || "General";
+
       if (!hierarchy[group]) {
-        hierarchy[group] = new Set();
+        hierarchy[group] = {};
       }
-      hierarchy[group].add(unit);
+      if (!hierarchy[group][unit]) {
+        hierarchy[group][unit] = [];
+      }
+
+      // Collect prompt glyphs for DJT visual preview pills
+      if (card.prompt && !hierarchy[group][unit].includes(card.prompt)) {
+        hierarchy[group][unit].push(card.prompt);
+      }
     }
 
-    // Convert internal Sets to Arrays for rendering
-    const formatted = {};
-    for (const [group, unitSet] of Object.entries(hierarchy)) {
-      formatted[group] = Array.from(unitSet).sort();
-    }
-    return formatted;
+    return hierarchy;
   }
 
   selectAllUnitsForCurrentDeck() {
     this.selectedUnits.clear();
     const hierarchy = this.getCategoryHierarchy();
     for (const [group, units] of Object.entries(hierarchy)) {
-      for (const unit of units) {
+      for (const unit of Object.keys(units)) {
         this.selectedUnits.add(`${group}::${unit}`);
       }
     }
@@ -132,10 +190,6 @@ export class Store extends EventTarget {
     this.dispatchEvent(new CustomEvent("categories-changed"));
   }
 
-  /**
-   * Filters the active deck cards against selected Units
-   * @returns {Array<Object>}
-   */
   getActivePool() {
     const deck = this.getCurrentDeck();
     if (!deck || !Array.isArray(deck.cards)) return [];
@@ -146,10 +200,6 @@ export class Store extends EventTarget {
     });
   }
 
-  /**
-   * Updates card weight dynamically:
-   * Correct answers decrease error weight; incorrect answers increase error weight.
-   */
   recordResult(cardId, isCorrect) {
     this.stats.attempts++;
     if (isCorrect) {
@@ -164,10 +214,8 @@ export class Store extends EventTarget {
       const card = deck.cards.find((c) => c.id === cardId);
       if (card) {
         if (isCorrect) {
-          // Decay weight toward floor of 0.2
           card.weight = Math.max(0.2, (card.weight || 1.0) * 0.7);
         } else {
-          // Escalate weight
           card.weight = (card.weight || 1.0) + 1.5;
         }
         this.saveState();
@@ -182,36 +230,32 @@ export class Store extends EventTarget {
     this.dispatchEvent(new CustomEvent("stats-updated", { detail: { ...this.stats } }));
   }
 
-  /**
-   * Appends imported cards to the currently active deck
-   */
   appendCards(newCards) {
     const deck = this.getCurrentDeck();
     if (!deck) return;
 
     deck.cards.push(...newCards);
-    this.saveState();
     this.selectAllUnitsForCurrentDeck();
+    this.saveState();
     this.dispatchEvent(new CustomEvent("deck-updated"));
   }
 
-  /**
-   * Replaces existing deck collection with parsed JSON data
-   */
   replaceDecks(newDecks) {
     this.decks = newDecks;
-    this.saveState();
     const firstDeckId = Object.keys(this.decks)[0] || "";
-    this.setDeck(firstDeckId);
+    this.currentDeckId = firstDeckId;
+    this.activeMode = this.decks[firstDeckId]?.defaultMode || "standard";
+    this.resetStats();
+    this.selectAllUnitsForCurrentDeck();
+    this.saveState();
+    this.dispatchEvent(new CustomEvent("deck-changed", { detail: { deckId: firstDeckId } }));
   }
 
-  /**
-   * Hard reset back to default static datasets
-   */
-  resetToDefaults() {
-    this.decks = structuredClone(this.defaultDecks);
-    this.saveState();
-    const firstDeckId = Object.keys(this.decks)[0] || "";
-    this.setDeck(firstDeckId);
+  async resetToDefaults() {
+    localStorage.removeItem(Store.STORAGE_KEY);
+    await this.loadFromManifest();
+    this.resetStats();
+    this.selectAllUnitsForCurrentDeck();
+    this.dispatchEvent(new CustomEvent("deck-changed", { detail: { deckId: this.currentDeckId } }));
   }
 }
