@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 2,
+  "defaultDeckId": "zh-hsk1",
+  "decks": [
+    {
+      "id": "zh-hsk1",
+      "name": "Mandarin (HSK 1 Core)",
+      "file": "./data/zh-hsk1.json",
+      "defaultMode": "standard"
+    },
+    {
+      "id": "fr-verbs",
+      "name": "French (Core Verb Conjugations)",
+      "file": "./data/fr-verbs.json",
+      "defaultMode": "standard"
+    }
+  ]
+}
