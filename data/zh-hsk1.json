@@ -1,0 +1,240 @@
+{
+  "name": "Mandarin (HSK 1 Core)",
+  "defaultMode": "pinyin-number",
+  "cards": [
+    {
+      "id": "zh-001",
+      "group": "Pronouns",
+      "unit": "Personal",
+      "prompt": "我",
+      "subtitle": "I / me",
+      "answers": ["wo3"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-002",
+      "group": "Pronouns",
+      "unit": "Personal",
+      "prompt": "你",
+      "subtitle": "you (singular)",
+      "answers": ["ni3"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-003",
+      "group": "Pronouns",
+      "unit": "Personal",
+      "prompt": "他",
+      "subtitle": "he / him",
+      "answers": ["ta1"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-004",
+      "group": "Pronouns",
+      "unit": "Personal",
+      "prompt": "她",
+      "subtitle": "she / her",
+      "answers": ["ta1"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-005",
+      "group": "Pronouns",
+      "unit": "Interrogative",
+      "prompt": "谁",
+      "subtitle": "who",
+      "answers": ["shei2", "shui2"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-006",
+      "group": "Pronouns",
+      "unit": "Interrogative",
+      "prompt": "什么",
+      "subtitle": "what",
+      "answers": ["shen2me", "shen2me5"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-007",
+      "group": "Numbers",
+      "unit": "1 to 5",
+      "prompt": "一",
+      "subtitle": "one",
+      "answers": ["yi1"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-008",
+      "group": "Numbers",
+      "unit": "1 to 5",
+      "prompt": "二",
+      "subtitle": "two",
+      "answers": ["er4"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-009",
+      "group": "Numbers",
+      "unit": "1 to 5",
+      "prompt": "三",
+      "subtitle": "three",
+      "answers": ["san1"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-010",
+      "group": "Numbers",
+      "unit": "1 to 5",
+      "prompt": "四",
+      "subtitle": "four",
+      "answers": ["si4"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-011",
+      "group": "Numbers",
+      "unit": "1 to 5",
+      "prompt": "五",
+      "subtitle": "five",
+      "answers": ["wu3"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-012",
+      "group": "Numbers",
+      "unit": "6 to 10",
+      "prompt": "六",
+      "subtitle": "six",
+      "answers": ["liu4"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-013",
+      "group": "Numbers",
+      "unit": "6 to 10",
+      "prompt": "七",
+      "subtitle": "seven",
+      "answers": ["qi1"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-014",
+      "group": "Numbers",
+      "unit": "6 to 10",
+      "prompt": "八",
+      "subtitle": "eight",
+      "answers": ["ba1"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-015",
+      "group": "Numbers",
+      "unit": "6 to 10",
+      "prompt": "九",
+      "subtitle": "nine",
+      "answers": ["jiu3"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-016",
+      "group": "Numbers",
+      "unit": "6 to 10",
+      "prompt": "十",
+      "subtitle": "ten",
+      "answers": ["shi2"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-017",
+      "group": "Common Verbs",
+      "unit": "Everyday",
+      "prompt": "是",
+      "subtitle": "to be",
+      "answers": ["shi4"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-018",
+      "group": "Common Verbs",
+      "unit": "Everyday",
+      "prompt": "有",
+      "subtitle": "to have",
+      "answers": ["you3"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-019",
+      "group": "Common Verbs",
+      "unit": "Everyday",
+      "prompt": "看",
+      "subtitle": "to look / see",
+      "answers": ["kan4"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-020",
+      "group": "Common Verbs",
+      "unit": "Everyday",
+      "prompt": "吃",
+      "subtitle": "to eat",
+      "answers": ["chi1"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-021",
+      "group": "Common Verbs",
+      "unit": "Everyday",
+      "prompt": "喝",
+      "subtitle": "to drink",
+      "answers": ["he1"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-022",
+      "group": "Adjectives",
+      "unit": "Basic Descriptors",
+      "prompt": "好",
+      "subtitle": "good",
+      "answers": ["hao3"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-023",
+      "group": "Adjectives",
+      "unit": "Basic Descriptors",
+      "prompt": "大",
+      "subtitle": "big",
+      "answers": ["da4"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-024",
+      "group": "Adjectives",
+      "unit": "Basic Descriptors",
+      "prompt": "小",
+      "subtitle": "small",
+      "answers": ["xiao3"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-025",
+      "group": "Adjectives",
+      "unit": "Basic Descriptors",
+      "prompt": "多",
+      "subtitle": "many / much",
+      "answers": ["duo1"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-026",
+      "group": "Adjectives",
+      "unit": "Basic Descriptors",
+      "prompt": "少",
+      "subtitle": "few / little",
+      "answers": ["shao3"],
+      "weight": 1.0
+    }
+  ]
+}
