@@ -1,49 +1,21 @@
 /**
  * js/app.js - Application Orchestrator & UI Binding Layer
- * Bootstraps the application, mounts baseline decks, hooks input
- * evaluation events, and coordinates UI transitions.
+ * Bootstraps async manifest storage, hooks the 3-tier review loop,
+ * renders DJT character preview pills, and connects GitHub Cloud Sync.
  */
 
 import { Store } from "./state.js";
 import { RecallEngine } from "./engine.js";
 import { DataImporter } from "./importer.js";
 import { SpatialNavigator } from "./tv-nav.js";
-
-// Baseline Seed Datasets (Mandarin HSK 1 & French Verbs)
-const DEFAULT_DECKS = {
-  "zh-hsk1": {
-    name: "Mandarin (HSK 1 Basics)",
-    defaultMode: "pinyin-number",
-    cards: [
-      { id: "zh-1", group: "Pronouns", unit: "Personal", prompt: "你", subtitle: "you", answers: ["ni3"], weight: 1.0 },
-      { id: "zh-2", group: "Pronouns", unit: "Personal", prompt: "我", subtitle: "I / me", answers: ["wo3"], weight: 1.0 },
-      { id: "zh-3", group: "Pronouns", unit: "Personal", prompt: "他", subtitle: "he / him", answers: ["ta1"], weight: 1.0 },
-      { id: "zh-4", group: "Greetings", unit: "Common", prompt: "好", subtitle: "good / well", answers: ["hao3"], weight: 1.0 },
-      { id: "zh-5", group: "Numbers", unit: "1 to 5", prompt: "一", subtitle: "one", answers: ["yi1"], weight: 1.0 },
-      { id: "zh-6", group: "Numbers", unit: "1 to 5", prompt: "二", subtitle: "two", answers: ["er4"], weight: 1.0 },
-      { id: "zh-7", group: "Numbers", unit: "1 to 5", prompt: "三", subtitle: "three", answers: ["san1"], weight: 1.0 },
-      { id: "zh-8", group: "Verbs", unit: "Actions", prompt: "认识", subtitle: "to know / recognize", answers: ["ren4shi", "ren4shi5"], weight: 1.0 },
-      { id: "zh-9", group: "Verbs", unit: "Actions", prompt: "行", subtitle: "capable / ok", answers: ["xing2"], weight: 1.0 }
-    ]
-  },
-  "fr-verbs": {
-    name: "French (Common Verbs)",
-    defaultMode: "latin-clean",
-    cards: [
-      { id: "fr-1", group: "Auxiliary", unit: "Present", prompt: "être (je)", subtitle: "to be", answers: ["suis"], weight: 1.0 },
-      { id: "fr-2", group: "Auxiliary", unit: "Present", prompt: "être (nous)", subtitle: "to be", answers: ["sommes"], weight: 1.0 },
-      { id: "fr-3", group: "Auxiliary", unit: "Present", prompt: "avoir (j')", subtitle: "to have", answers: ["ai"], weight: 1.0 },
-      { id: "fr-4", group: "Auxiliary", unit: "Present", prompt: "avoir (nous)", subtitle: "to have", answers: ["avons"], weight: 1.0 },
-      { id: "fr-5", group: "Regular -er", unit: "Present", prompt: "aimer (ils)", subtitle: "to like / love", answers: ["aiment"], weight: 1.0 }
-    ]
-  }
-};
+import { GitHubSync } from "./github-sync.js";
 
 class AppController {
   constructor() {
-    this.store = new Store(DEFAULT_DECKS);
+    this.store = new Store();
     this.engine = new RecallEngine(this.store);
     this.spatialNav = new SpatialNavigator("#app");
+    this.ghSync = new GitHubSync(this.store);
 
     this.dom = {
       deckSelect: document.getElementById("deckSelect"),
@@ -66,16 +38,30 @@ class AppController {
       btnImportTSV: document.getElementById("btnImportTSV"),
       btnExportJSON: document.getElementById("btnExportJSON"),
       inputFileJSON: document.getElementById("inputFileJSON"),
-      btnResetDefaults: document.getElementById("btnResetDefaults")
+      btnResetDefaults: document.getElementById("btnResetDefaults"),
+      // GitHub Cloud Sync Form Controls
+      ghTokenInput: document.getElementById("ghTokenInput"),
+      ghRepoInput: document.getElementById("ghRepoInput"),
+      ghPathInput: document.getElementById("ghPathInput"),
+      btnSaveSyncConfig: document.getElementById("btnSaveSyncConfig"),
+      btnPullGitHub: document.getElementById("btnPullGitHub"),
+      btnPushGitHub: document.getElementById("btnPushGitHub"),
+      syncStatusIndicator: document.getElementById("syncStatusIndicator")
     };
 
-    this.bindUIEvents();
-    this.bindEngineEvents();
-    this.initRender();
+    this.init();
   }
 
-  initRender() {
+  async init() {
+    this.bindUIEvents();
+    this.bindEngineEvents();
+    this.bindSyncEvents();
+
+    // Asynchronously bootstrap baseline decks from data/manifest.json
+    await this.store.init();
+
     this.populateDeckSelect();
+    this.populateSyncInputs();
     this.renderCategoryMatrix();
     this.updateStatsDisplay();
     this.engine.nextCard();
@@ -94,18 +80,36 @@ class AppController {
     this.dom.modeSelect.value = this.store.activeMode;
   }
 
+  populateSyncInputs() {
+    if (!this.dom.ghTokenInput) return;
+    this.dom.ghTokenInput.value = this.ghSync.config.token || "";
+    this.dom.ghRepoInput.value = this.ghSync.config.repo || "";
+    this.dom.ghPathInput.value = this.ghSync.config.filePath || "speedrecall-decks.json";
+  }
+
   /**
-   * Generates the dynamic DJT Kana style category checkbox matrix
+   * Renders the DJT-style Category Matrix with Dynamic Character Preview Pills
    */
   renderCategoryMatrix() {
     const hierarchy = this.store.getCategoryHierarchy();
     this.dom.unitCheckboxesGrid.innerHTML = "";
 
     for (const [group, units] of Object.entries(hierarchy)) {
-      for (const unit of units) {
+      // Group header tag
+      const groupHeader = document.createElement("div");
+      groupHeader.className = "group-section-title";
+      groupHeader.textContent = group;
+      this.dom.unitCheckboxesGrid.appendChild(groupHeader);
+
+      for (const [unit, tokens] of Object.entries(units)) {
         const key = `${group}::${unit}`;
-        const label = document.createElement("label");
-        label.className = "unit-checkbox-label nav-interactive";
+
+        const cardTile = document.createElement("div");
+        cardTile.className = "unit-tile";
+
+        // Unit interactive label & checkbox row
+        const headerRow = document.createElement("label");
+        headerRow.className = "unit-header-row nav-interactive";
 
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
@@ -117,9 +121,30 @@ class AppController {
           this.store.toggleUnit(group, unit, e.target.checked);
         });
 
-        label.appendChild(checkbox);
-        label.appendChild(document.createTextNode(`${group} — ${unit}`));
-        this.dom.unitCheckboxesGrid.appendChild(label);
+        const titleSpan = document.createElement("span");
+        titleSpan.className = "unit-title-text";
+        titleSpan.textContent = unit;
+
+        headerRow.appendChild(checkbox);
+        headerRow.appendChild(titleSpan);
+        cardTile.appendChild(headerRow);
+
+        // DJT Character Preview Pills (shows the exact tokens inside this unit)
+        if (Array.isArray(tokens) && tokens.length > 0) {
+          const pillsContainer = document.createElement("div");
+          pillsContainer.className = "unit-preview-tokens";
+
+          tokens.forEach((token) => {
+            const pill = document.createElement("span");
+            pill.className = "token-pill";
+            pill.textContent = token;
+            pillsContainer.appendChild(pill);
+          });
+
+          cardTile.appendChild(pillsContainer);
+        }
+
+        this.dom.unitCheckboxesGrid.appendChild(cardTile);
       }
     }
   }
@@ -132,8 +157,14 @@ class AppController {
     this.dom.statPoolSize.textContent = this.store.getActivePool().length;
   }
 
+  setSyncStatus(message, status = "info") {
+    if (!this.dom.syncStatusIndicator) return;
+    this.dom.syncStatusIndicator.className = `sync-status-indicator ${status}`;
+    this.dom.syncStatusIndicator.textContent = message;
+  }
+
   bindUIEvents() {
-    // Persistent Focus Lock: keep focus in input if clicked on non-interactive regions
+    // Keep focus inside input when clicking outside interactive elements
     window.addEventListener("click", (e) => {
       if (
         !this.dom.drawerDialog.open &&
@@ -143,7 +174,7 @@ class AppController {
       }
     });
 
-    // Zero-Latency Keystroke Evaluation
+    // Zero-Friction Keystroke Evaluation
     this.dom.recallInput.addEventListener("input", (e) => {
       this.engine.evaluateInput(e.target.value);
     });
@@ -166,13 +197,13 @@ class AppController {
       this.renderCategoryMatrix();
     });
 
-    // Mode Selector
+    // Mode Selector (3 Universal Tiers)
     this.dom.modeSelect.addEventListener("change", (e) => {
       this.store.setMode(e.target.value);
       this.dom.recallInput.focus();
     });
 
-    // Modal Drawer Controls
+    // Drawer Modal Toggle
     this.dom.btnToggleDrawer.addEventListener("click", () => {
       this.dom.drawerDialog.showModal();
       this.dom.btnToggleDrawer.setAttribute("aria-expanded", "true");
@@ -187,7 +218,7 @@ class AppController {
       this.dom.recallInput.focus();
     });
 
-    // Batch Category Controls
+    // Matrix Batch Selection
     this.dom.btnSelectAllUnits.addEventListener("click", () => {
       this.store.selectAllUnitsForCurrentDeck();
       this.renderCategoryMatrix();
@@ -198,7 +229,7 @@ class AppController {
       this.renderCategoryMatrix();
     });
 
-    // TSV Importer
+    // TSV Batch Importer
     this.dom.btnImportTSV.addEventListener("click", () => {
       const raw = this.dom.tsvInputArea.value;
       if (!raw.trim()) return;
@@ -241,11 +272,46 @@ class AppController {
     });
 
     // Hard Reset
-    this.dom.btnResetDefaults.addEventListener("click", () => {
-      if (confirm("Reset all decks to factory defaults? Custom added cards will be erased.")) {
-        this.store.resetToDefaults();
+    this.dom.btnResetDefaults.addEventListener("click", async () => {
+      if (confirm("Reset all decks to defaults? Custom added cards will be erased.")) {
+        await this.store.resetToDefaults();
         this.populateDeckSelect();
         this.renderCategoryMatrix();
+      }
+    });
+  }
+
+  bindSyncEvents() {
+    if (!this.dom.btnSaveSyncConfig) return;
+
+    this.dom.btnSaveSyncConfig.addEventListener("click", () => {
+      this.ghSync.saveConfig({
+        token: this.dom.ghTokenInput.value.trim(),
+        repo: this.dom.ghRepoInput.value.trim(),
+        filePath: this.dom.ghPathInput.value.trim() || "speedrecall-decks.json"
+      });
+      this.setSyncStatus("GitHub settings saved to local device.", "success");
+    });
+
+    this.dom.btnPullGitHub.addEventListener("click", async () => {
+      this.setSyncStatus("Connecting to GitHub...", "pending");
+      const res = await this.ghSync.pullFromRemote();
+      if (res.success) {
+        this.populateDeckSelect();
+        this.renderCategoryMatrix();
+        this.setSyncStatus(res.message, "success");
+      } else {
+        this.setSyncStatus(res.message, "error");
+      }
+    });
+
+    this.dom.btnPushGitHub.addEventListener("click", async () => {
+      this.setSyncStatus("Pushing to GitHub...", "pending");
+      const res = await this.ghSync.pushToRemote();
+      if (res.success) {
+        this.setSyncStatus(res.message, "success");
+      } else {
+        this.setSyncStatus(res.message, "error");
       }
     });
   }
@@ -261,7 +327,7 @@ class AppController {
 
       if (!card) {
         this.dom.cardPrompt.textContent = "—";
-        this.dom.cardSubtitle.textContent = "No units selected. Open settings to check categories.";
+        this.dom.cardSubtitle.textContent = "No units selected. Open categories to pick a unit.";
         this.dom.recallInput.disabled = true;
         return;
       }
@@ -270,7 +336,7 @@ class AppController {
       this.dom.cardPrompt.textContent = card.prompt;
       this.dom.cardSubtitle.textContent = card.subtitle || "";
 
-      // Adapt direction and language attributes
+      // Adapt direction and script attributes
       const isArabic = /[\u0600-\u06FF]/.test(card.prompt);
       this.dom.cardPrompt.setAttribute("dir", isArabic ? "rtl" : "ltr");
       this.dom.cardPrompt.setAttribute("lang", isArabic ? "ar" : "zh");
