@@ -1,0 +1,233 @@
+/**
+ * css/drawer.css - DJT Kana Dynamic Matrix & Settings Modal
+ */
+
+/* Native Dialog Elevation & Backdrop */
+.filter-drawer {
+  margin: auto;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-bg-surface);
+  color: var(--color-text-main);
+  width: calc(100% - 2rem);
+  max-width: 600px;
+  max-height: 85dvh;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+}
+
+.filter-drawer::backdrop {
+  background-color: rgba(9, 13, 22, 0.75);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.drawer-inner {
+  display: flex;
+  flex-direction: column;
+  max-height: 85dvh;
+}
+
+/* Modal Header */
+.drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.drawer-header h2 {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+}
+
+/* Scrollable Dialog Body */
+.drawer-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* DJT Kana Dynamic Category Matrix */
+.matrix-container {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+}
+
+.matrix-legend {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0 0.5rem;
+}
+
+.matrix-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Responsive Checkbox Matrix */
+.units-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 0.5rem;
+  max-height: 240px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+/* Accessible Interactive Checkbox Tile */
+.unit-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: var(--font-size-sm);
+  background-color: var(--color-bg-base);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.65rem;
+  cursor: pointer;
+  user-select: none;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.unit-checkbox-label:hover {
+  border-color: var(--color-border-strong);
+  background-color: var(--color-bg-subtle);
+}
+
+.unit-checkbox-label input[type="checkbox"] {
+  accent-color: var(--color-accent);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+/* Collapsible Bulk Importer Section */
+.accordion-section {
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.accordion-section summary {
+  padding: 0.75rem 1rem;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  cursor: pointer;
+  background-color: var(--color-bg-subtle);
+  user-select: none;
+}
+
+.accordion-content {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.helper-text {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-dim);
+}
+
+.helper-text code {
+  font-family: var(--font-mono);
+  color: var(--color-accent);
+}
+
+.raw-tsv-input {
+  width: 100%;
+  background-color: var(--color-bg-base);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: var(--font-size-xs);
+  color: var(--color-text-main);
+  resize: vertical;
+}
+
+.raw-tsv-input:focus {
+  border-color: var(--color-accent);
+  outline: none;
+}
+
+/* Button Component Scales */
+.btn-primary,
+.btn-secondary,
+.btn-danger,
+.btn-sm {
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  text-align: center;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.btn-primary {
+  background-color: var(--color-accent);
+  color: var(--color-text-inverted);
+  padding: 0.6rem 1rem;
+}
+
+.btn-primary:hover {
+  background-color: var(--color-accent-hover);
+}
+
+.btn-secondary,
+.file-label {
+  background-color: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-subtle);
+  color: var(--color-text-main);
+  padding: 0.5rem 0.85rem;
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+}
+
+.btn-secondary:hover,
+.file-label:hover {
+  background-color: var(--color-bg-hover);
+  border-color: var(--color-border-strong);
+}
+
+.btn-danger {
+  background-color: transparent;
+  border: 1px solid var(--color-error);
+  color: var(--color-error);
+  padding: 0.5rem 0.85rem;
+  font-size: var(--font-size-sm);
+}
+
+.btn-danger:hover {
+  background-color: var(--color-error-bg);
+}
+
+.btn-sm {
+  font-size: var(--font-size-xs);
+  padding: 0.35rem 0.65rem;
+  background-color: var(--color-bg-subtle);
+  border: 1px solid var(--color-border-subtle);
+  color: var(--color-text-muted);
+}
+
+.btn-sm:hover {
+  color: var(--color-text-main);
+  border-color: var(--color-border-strong);
+}
+
+/* Footer Storage Toolbar */
+.storage-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  border-top: 1px solid var(--color-border-subtle);
+  padding-top: 1.25rem;
+}
