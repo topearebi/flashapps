@@ -1,124 +1,130 @@
 /**
- * js/normalizer.js
- * Pure, deterministic string normalizer supporting:
- *  - Mandarin Pinyin (Number tone, Tone mark, Plain)
- *  - Latin/Romance languages (NFD accent stripping)
- *  - Arabic/Generic transliteration (Whitespace & character normalization)
+ * js/normalizer.js - Universal Evaluation & String Transformation Core
+ * 
+ * Consolidates evaluation into 3 cross-language tiers:
+ *  - STANDARD: Frictionless recall. Strips accents/diacritics, maps standard
+ *              keyboard approximations (ü -> v), retains structural numbers.
+ *  - RELAXED:  Maximum speed. Drops numbers, diacritics, accents, and punctuation.
+ *  - STRICT:   Literal orthography. Preserves exact accents, tone marks, and digits.
  */
 
 export const EvaluationModes = Object.freeze({
-  PINYIN_NUMBER: "pinyin-number", // e.g. "hao3", "lv4" (strips diacritics, expects digits)
-  PINYIN_TONE: "pinyin-tone",     // e.g. "hǎo", "lǜ" (strict accent evaluation)
-  PINYIN_PLAIN: "pinyin-plain",   // e.g. "hao", "lu" / "lv" (strips tones completely)
-  LATIN_CLEAN: "latin-clean",     // e.g. "reponse" matches "réponse" (NFD diacritic strip)
-  STRICT: "strict"                // Exact character-by-character trimmed comparison
+  STANDARD: "standard", // Smart friction-free (default)
+  RELAXED: "relaxed",   // Pure speed (toneless, unaccented)
+  STRICT: "strict"      // Exact orthography
 });
 
 export class Normalizer {
   /**
-   * Primary entry point to compare user input with a target answer
-   * @param {string} userInput - Raw string directly from the input element
+   * Primary entry point comparing candidate input with an expected target answer.
+   * 
+   * @param {string} userInput - Raw string from user input
    * @param {string} targetAnswer - Canonical answer stored in the card model
-   * @param {string} mode - One of EvaluationModes
+   * @param {string} mode - One of EvaluationModes (default: STANDARD)
    * @returns {boolean}
    */
-  static isMatch(userInput, targetAnswer, mode = EvaluationModes.PINYIN_NUMBER) {
+  static isMatch(userInput, targetAnswer, mode = EvaluationModes.STANDARD) {
     if (!userInput || !targetAnswer) return false;
 
     switch (mode) {
-      case EvaluationModes.PINYIN_NUMBER:
-        return this.toPinyinNumber(userInput) === this.toPinyinNumber(targetAnswer);
-
-      case EvaluationModes.PINYIN_PLAIN:
-        return this.toPinyinPlain(userInput) === this.toPinyinPlain(targetAnswer);
-
-      case EvaluationModes.PINYIN_TONE:
-        return this.toPinyinTone(userInput) === this.toPinyinTone(targetAnswer);
-
-      case EvaluationModes.LATIN_CLEAN:
-        return this.toLatinClean(userInput) === this.toLatinClean(targetAnswer);
+      case EvaluationModes.RELAXED:
+        return this.toRelaxed(userInput) === this.toRelaxed(targetAnswer);
 
       case EvaluationModes.STRICT:
-      default:
         return this.toStrict(userInput) === this.toStrict(targetAnswer);
+
+      case EvaluationModes.STANDARD:
+      default:
+        return this.toStandard(userInput) === this.toStandard(targetAnswer);
     }
   }
 
   /**
-   * Normalizes for Mandarin Numbered Tones:
-   * - Maps 'ü' to 'v'
-   * - Strips tone diacritics if entered erroneously
-   * - Removes internal and external whitespace
-   * - Converts tone 5 (neutral) to empty string for consistent compound comparisons
+   * Standard Mode: Frictionless Typing
+   * - Lowercases and trims outer whitespace
+   * - Collapses internal whitespace sequences into a single space
+   * - Replaces 'ü' and 'ǖ'/'ǘ'/'ǚ'/'ǜ' with 'v' for standard keyboard input
+   * - Normalizes diacritics to numeric tone digits if tone marks were entered
+   * - Strips residual Latin accents (é -> e, ç -> c, ñ -> n) via NFD decomposition
+   * - Normalizes neutral tone 5 to empty string so 'ba4ba5' equals 'ba4ba'
    */
-  static toPinyinNumber(str) {
-    return str
-      .toLowerCase()
-      .trim()
+  static toStandard(str) {
+    let s = str.trim().toLowerCase();
+
+    // Map explicit ü variants to v before decomposition
+    s = s.replace(/[üǖǘǚǜ]/g, "v");
+
+    // Convert diacritic pinyin to tone numbers if diacritics were used
+    s = this.diacriticPinyinToNumeric(s);
+
+    // Strip remaining Latin diacritics (é -> e, etc.)
+    s = s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+    // Normalize whitespace & tone 5 representation
+    return s
       .replace(/\s+/g, "")
-      .replace(/ü/g, "v")
-      // Normalize NFD and strip diacritics if any crept into number mode
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      // Convert neutral tone 5 to omission so "ba4ba5" equals "ba4ba"
       .replace(/5/g, "");
   }
 
   /**
-   * Normalizes for Plain/Untoned Speed Drills:
-   * - Strips all tone digits (1-5)
-   * - Strips all Unicode diacritics
-   * - Collapses 'ü' to 'v' (also accepts standard 'u' equivalence)
-   * - Strips whitespace
+   * Relaxed Mode: Pure Rapid Recall
+   * - Passes through the standard normalization pipeline
+   * - Strips all tone numbers (1-5)
+   * - Strips common punctuation
    */
-  static toPinyinPlain(str) {
-    return str
-      .toLowerCase()
-      .trim()
-      .replace(/\s+/g, "")
+  static toRelaxed(str) {
+    return this.toStandard(str)
       .replace(/[1-5]/g, "")
-      .replace(/ü/g, "v")
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "");
+      .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, "");
   }
 
   /**
-   * Normalizes for Pinyin with Diacritics:
-   * - Preserves accent marks (using NFC canonical composition)
-   * - Lowercases and strips all spaces
-   * - Normalizes alternative forms of ü
-   */
-  static toPinyinTone(str) {
-    return str
-      .toLowerCase()
-      .trim()
-      .replace(/\s+/g, "")
-      .normalize("NFC");
-  }
-
-  /**
-   * Normalizes for Romance languages (French, Spanish, etc.):
-   * - Strips accents using Unicode NFD decomposition (é -> e, ç -> c, ñ -> n)
-   * - Collapses internal multi-spaces to a single space
-   * - Lowercases and trims
-   */
-  static toLatinClean(str) {
-    return str
-      .toLowerCase()
-      .trim()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/\s+/g, " ");
-  }
-
-  /**
-   * Basic exact match fallback:
-   * - Lowercase, trim edges, collapse internal multi-spaces
+   * Strict Mode: Exact Orthography
+   * - Lowercases and trims edges
+   * - Collapses multiple spaces to a single standard space
+   * - Preserves all accents, diacritics, and tone numbers exactly as authored
    */
   static toStrict(str) {
     return str
       .toLowerCase()
       .trim()
-      .replace(/\s+/g, " ");
+      .replace(/\s+/g, " ")
+      .normalize("NFC");
+  }
+
+  /**
+   * Utility helper: Converts tone-marked vowels into standard trailing number pinyin.
+   * e.g., 'hǎo' -> 'hao3', 'xué' -> 'xue2', 'lǜ' -> 'lv4'
+   */
+  static diacriticPinyinToNumeric(str) {
+    const toneMap = {
+      // First tone (Macron)
+      'ā': 'a1', 'ē': 'e1', 'ī': 'i1', 'ō': 'o1', 'ū': 'u1', 'ǖ': 'v1',
+      // Second tone (Acute)
+      'á': 'a2', 'é': 'e2', 'í': 'i2', 'ó': 'o2', 'ú': 'u2', 'ǘ': 'v2',
+      // Third tone (Caron)
+      'ǎ': 'a3', 'ě': 'e3', 'ǐ': 'i3', 'ǒ': 'o3', 'ǔ': 'u3', 'ǚ': 'v3',
+      // Fourth tone (Grave)
+      'à': 'a4', 'è': 'e4', 'ì': 'i4', 'ò': 'o4', 'ù': 'u4', 'ǜ': 'v4'
+    };
+
+    let result = str;
+    let detectedTone = "";
+
+    // Search for accented vowels and swap with their base letter + tone number
+    for (const [accented, replacement] of Object.entries(toneMap)) {
+      if (result.includes(accented)) {
+        const baseChar = replacement[0];
+        detectedTone = replacement[1];
+        result = result.replace(new RegExp(accented, "g"), baseChar);
+      }
+    }
+
+    // If a diacritic was converted and no explicit number is present at the end, append it
+    if (detectedTone && !/[1-5]/.test(result)) {
+      result += detectedTone;
+    }
+
+    return result;
   }
 }
