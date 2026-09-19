@@ -28,16 +28,14 @@
       <div class="deck-selector-group">
         <label for="deckSelect" class="sr-only">Select Deck</label>
         <select id="deckSelect" class="nav-interactive" aria-label="Select active deck">
-          <!-- Populated dynamically from storage -->
+          <!-- Populated dynamically from storage / manifest -->
         </select>
         
         <label for="modeSelect" class="sr-only">Evaluation Mode</label>
         <select id="modeSelect" class="nav-interactive" aria-label="Select evaluation mode">
-          <option value="pinyin-number">Pinyin (Number: hao3)</option>
-          <option value="pinyin-plain">Pinyin (Plain: hao)</option>
-          <option value="pinyin-tone">Pinyin (Tone: hǎo)</option>
-          <option value="latin-clean">Latin Clean (No accents)</option>
-          <option value="strict">Strict Literal</option>
+          <option value="standard">Standard (Frictionless)</option>
+          <option value="relaxed">Relaxed (Pure Speed)</option>
+          <option value="strict">Strict (Literal)</option>
         </select>
       </div>
 
@@ -111,7 +109,7 @@
       <div id="feedbackRegion" class="feedback-banner" role="alert" aria-live="assertive"></div>
     </main>
 
-    <!-- DJT Kana Style Dynamic Selection Drawer (Modal Dialog) -->
+    <!-- Dynamic Category Matrix & Settings Drawer -->
     <dialog id="drawerDialog" class="filter-drawer" aria-labelledby="drawerTitle">
       <div class="drawer-inner">
         <header class="drawer-header">
@@ -120,24 +118,72 @@
         </header>
 
         <section class="drawer-body">
-          <!-- Dynamic Unit Matrix auto-populated from card dataset -->
+          <!-- Dynamic Unit Matrix with DJT-style Character Preview Pills -->
           <fieldset class="matrix-container">
-            <legend class="matrix-legend">Select Rows / Columns to Practice</legend>
+            <legend class="matrix-legend">Select Units to Practice</legend>
             <div class="matrix-actions">
               <button type="button" id="btnSelectAllUnits" class="btn-sm nav-interactive">Select All</button>
               <button type="button" id="btnDeselectAllUnits" class="btn-sm nav-interactive">Deselect All</button>
             </div>
             <div id="unitCheckboxesGrid" class="units-grid">
-              <!-- Dynamically mapped checkboxes inject here -->
+              <!-- Dynamically mapped categories & preview pills inject here -->
             </div>
           </fieldset>
+
+          <!-- Serverless Multi-Device Cloud Sync (GitHub REST API) -->
+          <details class="accordion-section">
+            <summary class="nav-interactive">Cloud Sync (GitHub)</summary>
+            <div class="accordion-content">
+              <p class="helper-text">
+                Sync cards and weights across devices using a personal GitHub repository. Requires a fine-grained Personal Access Token with <code>Contents: Read and write</code>.
+              </p>
+              
+              <label for="ghTokenInput" class="helper-text">Personal Access Token (PAT):</label>
+              <input 
+                type="password" 
+                id="ghTokenInput" 
+                class="sync-input nav-interactive" 
+                placeholder="github_pat_..." 
+                autocomplete="off"
+                spellcheck="false"
+              />
+
+              <label for="ghRepoInput" class="helper-text">Repository (owner/repo):</label>
+              <input 
+                type="text" 
+                id="ghRepoInput" 
+                class="sync-input nav-interactive" 
+                placeholder="username/my-flashcards"
+                autocomplete="off"
+                spellcheck="false"
+              />
+
+              <label for="ghPathInput" class="helper-text">Storage File Path:</label>
+              <input 
+                type="text" 
+                id="ghPathInput" 
+                class="sync-input nav-interactive" 
+                value="speedrecall-decks.json"
+                autocomplete="off"
+                spellcheck="false"
+              />
+
+              <div class="matrix-actions">
+                <button type="button" id="btnSaveSyncConfig" class="btn-sm nav-interactive">Save Settings</button>
+                <button type="button" id="btnPullGitHub" class="btn-primary nav-interactive">Pull (Sync Down)</button>
+                <button type="button" id="btnPushGitHub" class="btn-secondary nav-interactive">Push (Sync Up)</button>
+              </div>
+
+              <div id="syncStatusIndicator" class="sync-status-indicator" role="status" aria-live="polite"></div>
+            </div>
+          </details>
 
           <!-- Raw Data / Delimited TSV Importer -->
           <details class="accordion-section">
             <summary class="nav-interactive">Batch Import (TSV / Plain Text)</summary>
             <div class="accordion-content">
               <p class="helper-text">Format: <code>Group [tab] Unit [tab] Prompt [tab] Subtitle [tab] Answer(s)</code></p>
-              <textarea id="tsvInputArea" class="raw-tsv-input" rows="5" placeholder="HSK 1	Pronouns	你	you	ni3,ni&#10;HSK 1	Pronouns	好	good	hao3,hao"></textarea>
+              <textarea id="tsvInputArea" class="raw-tsv-input" rows="4" placeholder="HSK 1	Pronouns	你	you	ni3,ni&#10;HSK 1	Pronouns	好	good	hao3,hao"></textarea>
               <button type="button" id="btnImportTSV" class="btn-primary nav-interactive">Append to Current Deck</button>
             </div>
           </details>
