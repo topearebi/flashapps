@@ -1,261 +1,312 @@
 /**
- * js/state.js - Reactive State Store & Manifest Ingestion Layer
- * Handles:
- *  - Dynamic asynchronous loading from data/manifest.json
- *  - Schema version migration (clearing stale stub caches)
- *  - Category hierarchy indexing with character tokens for visual previews
- *  - Spaced repetition weighting and local persistence
+ * js/state.js
+ * SpeedRecall Reactive State Store & Non-Destructive Reconciliation Engine
  */
 
-export class Store extends EventTarget {
-  static STORAGE_KEY = "speedrecall_state_v2";
-  static MANIFEST_PATH = "./data/manifest.json";
+const STORAGE_KEY = 'speedrecall_v2';
+const MANIFEST_PATH = './data/manifest.json';
+const CURRENT_SCHEMA_VERSION = 3;
 
+class StateStore extends EventTarget {
   constructor() {
     super();
-    this.decks = {};
-    this.currentDeckId = "";
-    this.activeMode = "standard";
-    this.schemaVersion = 2;
-    
-    // Set of active category keys: Set<"GroupName::UnitName">
-    this.selectedUnits = new Set();
+    this.state = this._loadLocalState() || this._createDefaultState();
+    this.manifest = null;
+    this.isReconciling = false;
+  }
 
-    // Session Statistics
-    this.stats = {
-      correct: 0,
-      attempts: 0,
-      streak: 0
+  // --- Initial Setup & Persistence ---
+
+  _createDefaultState() {
+    return {
+      schemaVersion: CURRENT_SCHEMA_VERSION,
+      activeDeckId: null,
+      activeMode: 'standard', // 'standard' | 'relaxed' | 'strict'
+      customWeights: {},      // Persistent weights keyed by card ID: { [cardId]: weight }
+      decks: {},              // Full deck objects: { [deckId]: deckData }
+      metadata: {
+        lastSync: null,
+        installedAt: Date.now()
+      }
     };
+  }
 
-    this.isInitialized = false;
+  _loadLocalState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      
+      // Ensure basic shape compatibility
+      if (!parsed.decks) parsed.decks = {};
+      if (!parsed.customWeights) parsed.customWeights = {};
+      return parsed;
+    } catch (err) {
+      console.error('[State] Failed to parse local state:', err);
+      return null;
+    }
+  }
+
+  save() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.state));
+      this.dispatchEvent(new CustomEvent('state-saved', { detail: this.state }));
+    } catch (err) {
+      console.error('[State] Failed to persist state to localStorage:', err);
+    }
   }
 
   /**
-   * Asynchronously bootstraps state: verifies versioning, ingests manifest if needed
+   * Initializes store, triggers reconciliation with manifest, and sets active deck.
    */
   async init() {
-    const raw = localStorage.getItem(Store.STORAGE_KEY);
-    let stateValid = false;
+    await this.reconcileWithRemoteManifest();
 
-    if (raw) {
-      try {
-        const parsed = JSON.parse(raw);
-        if (parsed.schemaVersion === this.schemaVersion && parsed.decks && Object.keys(parsed.decks).length > 0) {
-          this.decks = parsed.decks;
-          this.currentDeckId = parsed.currentDeckId || Object.keys(this.decks)[0];
-          this.activeMode = parsed.activeMode || "standard";
-          stateValid = true;
-        }
-      } catch (err) {
-        console.warn("Storage corrupted or outdated. Reloading from manifest.", err);
-      }
+    // Select default deck if none is set
+    if (!this.state.activeDeckId && this.manifest?.defaultDeckId) {
+      this.setActiveDeck(this.manifest.defaultDeckId, false);
+    } else if (!this.state.activeDeckId && Object.keys(this.state.decks).length > 0) {
+      this.setActiveDeck(Object.keys(this.state.decks)[0], false);
     }
 
-    if (!stateValid) {
-      await this.loadFromManifest();
-    }
-
-    this.selectAllUnitsForCurrentDeck();
-    this.isInitialized = true;
-    this.dispatchEvent(new CustomEvent("initialized"));
+    this.save();
+    this.dispatchEvent(new CustomEvent('state-ready', { detail: this.state }));
   }
 
-  /**
-   * Fetches data/manifest.json and loads all baseline JSON decks concurrently
-   */
-  async loadFromManifest() {
+  // --- Non-Destructive Manifest & Deck Reconciliation ---
+
+  async reconcileWithRemoteManifest() {
+    if (this.isReconciling) return;
+    this.isReconciling = true;
+
     try {
-      const manifestRes = await fetch(Store.MANIFEST_PATH);
-      if (!manifestRes.ok) throw new Error(`HTTP ${manifestRes.status} loading manifest`);
-      const manifest = await manifestRes.json();
+      // Add timestamp query parameter to bypass intermediate caches
+      const manifestRes = await fetch(`${MANIFEST_PATH}?t=${Date.now()}`);
+      if (!manifestRes.ok) {
+        console.warn('[State] Could not fetch manifest. Operating with cached state.');
+        return;
+      }
 
-      const loadedDecks = {};
+      this.manifest = await manifestRes.json();
+      let hasChanges = false;
 
-      await Promise.all(
-        manifest.decks.map(async (entry) => {
-          try {
-            const deckRes = await fetch(entry.file);
-            if (!deckRes.ok) throw new Error(`HTTP ${deckRes.status} loading ${entry.file}`);
-            const deckData = await deckRes.json();
+      // Ensure local schema matches or upgrades cleanly
+      if (this.state.schemaVersion !== this.manifest.schemaVersion) {
+        this.state.schemaVersion = this.manifest.schemaVersion;
+        hasChanges = true;
+      }
 
-            loadedDecks[entry.id] = {
-              name: deckData.name || entry.name,
-              defaultMode: entry.defaultMode || "standard",
-              cards: deckData.cards || []
-            };
-          } catch (fetchErr) {
-            console.error(`Failed to ingest deck file: ${entry.file}`, fetchErr);
+      // Reconcile each deck listed in manifest
+      for (const deckRef of (this.manifest.decks || [])) {
+        const existingDeck = this.state.decks[deckRef.id];
+
+        try {
+          const deckRes = await fetch(`${deckRef.file}?t=${Date.now()}`);
+          if (!deckRes.ok) continue;
+
+          const freshDeckData = await deckRes.json();
+
+          if (!existingDeck) {
+            // New deck detected: Ingest and attach any cached custom weights
+            this._applyWeightsToDeck(freshDeckData);
+            this.state.decks[deckRef.id] = freshDeckData;
+            hasChanges = true;
+            console.log(`[State] Ingested new deck: ${deckRef.name}`);
+          } else {
+            // Existing deck detected: Upsert cards non-destructively
+            const wasUpdated = this._mergeDeckCards(existingDeck, freshDeckData);
+            if (wasUpdated) {
+              hasChanges = true;
+              console.log(`[State] Reconciled deck data: ${deckRef.name}`);
+            }
           }
-        })
-      );
+        } catch (fetchErr) {
+          console.warn(`[State] Failed fetching deck file ${deckRef.file}:`, fetchErr);
+        }
+      }
 
-      this.decks = loadedDecks;
-      this.currentDeckId = manifest.defaultDeckId || Object.keys(this.decks)[0] || "";
-      this.activeMode = this.decks[this.currentDeckId]?.defaultMode || "standard";
-      this.saveState();
+      if (hasChanges) {
+        this.save();
+        this.dispatchEvent(new CustomEvent('deck-reconciled', {
+          detail: { decks: this.state.decks, activeDeckId: this.state.activeDeckId }
+        }));
+      }
     } catch (err) {
-      console.error("Critical failure during manifest ingestion:", err);
+      console.warn('[State] Reconciliation encountered an issue:', err);
+    } finally {
+      this.isReconciling = false;
     }
-  }
-
-  saveState() {
-    try {
-      const payload = {
-        schemaVersion: this.schemaVersion,
-        currentDeckId: this.currentDeckId,
-        activeMode: this.activeMode,
-        decks: this.decks
-      };
-      localStorage.setItem(Store.STORAGE_KEY, JSON.stringify(payload));
-      this.dispatchEvent(new CustomEvent("state-saved"));
-    } catch (err) {
-      console.error("Failed to write state to localStorage:", err);
-    }
-  }
-
-  getCurrentDeck() {
-    return this.decks[this.currentDeckId] || null;
-  }
-
-  setDeck(deckId) {
-    if (!this.decks[deckId]) return;
-    this.currentDeckId = deckId;
-    this.activeMode = this.decks[deckId].defaultMode || "standard";
-    this.resetStats();
-    this.selectAllUnitsForCurrentDeck();
-    this.saveState();
-    this.dispatchEvent(new CustomEvent("deck-changed", { detail: { deckId } }));
-  }
-
-  setMode(mode) {
-    this.activeMode = mode;
-    this.saveState();
-    this.dispatchEvent(new CustomEvent("mode-changed", { detail: { mode } }));
   }
 
   /**
-   * Builds an indexed map of Groups, Units, and constituent Character Tokens
-   * Returns: { [group: string]: { [unit: string]: Array<string> } }
+   * Merges incoming deck content into existing deck.
+   * Preserves card error weights while updating card prompts, subtitles, categories, and answers.
    */
-  getCategoryHierarchy() {
-    const deck = this.getCurrentDeck();
-    if (!deck || !Array.isArray(deck.cards)) return {};
+  _mergeDeckCards(existingDeck, upstreamDeck) {
+    let modified = false;
 
-    const hierarchy = {};
+    if (existingDeck.name !== upstreamDeck.name) {
+      existingDeck.name = upstreamDeck.name;
+      modified = true;
+    }
 
+    if (existingDeck.defaultMode !== upstreamDeck.defaultMode) {
+      existingDeck.defaultMode = upstreamDeck.defaultMode;
+      modified = true;
+    }
+
+    const existingCardMap = new Map((existingDeck.cards || []).map(c => [c.id, c]));
+    const mergedCards = [];
+
+    for (const freshCard of (upstreamDeck.cards || [])) {
+      const current = existingCardMap.get(freshCard.id);
+
+      if (current) {
+        // Retain existing weight, but update definitions/answers/subtitles
+        const cardWeight = this.state.customWeights[freshCard.id] ?? current.weight ?? 1.0;
+        mergedCards.push({
+          ...freshCard,
+          weight: cardWeight
+        });
+
+        // Check if any card content changed
+        if (
+          current.prompt !== freshCard.prompt ||
+          current.subtitle !== freshCard.subtitle ||
+          current.group !== freshCard.group ||
+          current.unit !== freshCard.unit ||
+          JSON.stringify(current.answers) !== JSON.stringify(freshCard.answers)
+        ) {
+          modified = true;
+        }
+      } else {
+        // Newly added card in existing deck
+        const cardWeight = this.state.customWeights[freshCard.id] ?? freshCard.weight ?? 1.0;
+        mergedCards.push({
+          ...freshCard,
+          weight: cardWeight
+        });
+        modified = true;
+      }
+    }
+
+    if (mergedCards.length !== (existingDeck.cards || []).length) {
+      modified = true;
+    }
+
+    existingDeck.cards = mergedCards;
+    return modified;
+  }
+
+  _applyWeightsToDeck(deck) {
+    if (!deck || !Array.isArray(deck.cards)) return;
     for (const card of deck.cards) {
-      const group = card.group || "General";
-      const unit = card.unit || "General";
-
-      if (!hierarchy[group]) {
-        hierarchy[group] = {};
-      }
-      if (!hierarchy[group][unit]) {
-        hierarchy[group][unit] = [];
-      }
-
-      // Collect prompt glyphs for DJT visual preview pills
-      if (card.prompt && !hierarchy[group][unit].includes(card.prompt)) {
-        hierarchy[group][unit].push(card.prompt);
+      if (this.state.customWeights[card.id] !== undefined) {
+        card.weight = this.state.customWeights[card.id];
+      } else {
+        card.weight = card.weight ?? 1.0;
       }
     }
-
-    return hierarchy;
   }
 
-  selectAllUnitsForCurrentDeck() {
-    this.selectedUnits.clear();
-    const hierarchy = this.getCategoryHierarchy();
-    for (const [group, units] of Object.entries(hierarchy)) {
-      for (const unit of Object.keys(units)) {
-        this.selectedUnits.add(`${group}::${unit}`);
-      }
-    }
-    this.dispatchEvent(new CustomEvent("categories-changed"));
-  }
+  // --- Card Weight Adjustment (Error Roulette Rules) ---
 
-  deselectAllUnits() {
-    this.selectedUnits.clear();
-    this.dispatchEvent(new CustomEvent("categories-changed"));
-  }
+  recordResult(cardId, isCorrect) {
+    const activeDeck = this.getActiveDeck();
+    if (!activeDeck || !Array.isArray(activeDeck.cards)) return;
 
-  toggleUnit(group, unit, isSelected) {
-    const key = `${group}::${unit}`;
-    if (isSelected) {
-      this.selectedUnits.add(key);
+    const card = activeDeck.cards.find(c => c.id === cardId);
+    if (!card) return;
+
+    const currentWeight = card.weight ?? 1.0;
+    let nextWeight;
+
+    if (isCorrect) {
+      nextWeight = Math.max(0.2, Number((currentWeight * 0.7).toFixed(3)));
     } else {
-      this.selectedUnits.delete(key);
+      nextWeight = Number((currentWeight + 1.5).toFixed(3));
     }
-    this.dispatchEvent(new CustomEvent("categories-changed"));
+
+    card.weight = nextWeight;
+    this.state.customWeights[cardId] = nextWeight;
+
+    this.save();
+    this.dispatchEvent(new CustomEvent('card-weight-updated', {
+      detail: { cardId, weight: nextWeight, isCorrect }
+    }));
+  }
+
+  // --- Active Deck & Mode Selection ---
+
+  setActiveDeck(deckId, triggerSave = true) {
+    if (!this.state.decks[deckId]) {
+      console.warn(`[State] Deck ${deckId} does not exist.`);
+      return;
+    }
+
+    this.state.activeDeckId = deckId;
+    const deck = this.state.decks[deckId];
+    if (deck.defaultMode) {
+      this.state.activeMode = deck.defaultMode;
+    }
+
+    if (triggerSave) this.save();
+
+    this.dispatchEvent(new CustomEvent('deck-changed', {
+      detail: { deckId, deck: this.getActiveDeck() }
+    }));
+  }
+
+  setEvaluationMode(mode) {
+    if (!['standard', 'relaxed', 'strict'].includes(mode)) return;
+    this.state.activeMode = mode;
+    this.save();
+    this.dispatchEvent(new CustomEvent('mode-changed', { detail: { mode } }));
+  }
+
+  getActiveDeck() {
+    return this.state.decks[this.state.activeDeckId] || null;
   }
 
   getActivePool() {
-    const deck = this.getCurrentDeck();
-    if (!deck || !Array.isArray(deck.cards)) return [];
-
-    return deck.cards.filter((card) => {
-      const key = `${card.group || "General"}::${card.unit || "General"}`;
-      return this.selectedUnits.has(key);
-    });
+    const deck = this.getActiveDeck();
+    return deck && Array.isArray(deck.cards) ? deck.cards : [];
   }
 
-  recordResult(cardId, isCorrect) {
-    this.stats.attempts++;
-    if (isCorrect) {
-      this.stats.correct++;
-      this.stats.streak++;
-    } else {
-      this.stats.streak = 0;
+  getDeckList() {
+    return Object.entries(this.state.decks).map(([id, deck]) => ({
+      id,
+      name: deck.name || id,
+      count: Array.isArray(deck.cards) ? deck.cards.length : 0,
+      defaultMode: deck.defaultMode || 'standard'
+    }));
+  }
+
+  /**
+   * Generates a 2-level hierarchy (Group -> Unit) for the DJT Drawer Matrix
+   */
+  getDeckMatrix(deckId = this.state.activeDeckId) {
+    const deck = this.state.decks[deckId];
+    if (!deck || !Array.isArray(deck.cards)) return {};
+
+    const matrix = {};
+    for (const card of deck.cards) {
+      const group = card.group || 'General';
+      const unit = card.unit || 'Default';
+
+      if (!matrix[group]) matrix[group] = {};
+      if (!matrix[group][unit]) matrix[group][unit] = [];
+
+      matrix[group][unit].push({
+        id: card.id,
+        prompt: card.prompt,
+        subtitle: card.subtitle,
+        weight: card.weight
+      });
     }
 
-    const deck = this.getCurrentDeck();
-    if (deck) {
-      const card = deck.cards.find((c) => c.id === cardId);
-      if (card) {
-        if (isCorrect) {
-          card.weight = Math.max(0.2, (card.weight || 1.0) * 0.7);
-        } else {
-          card.weight = (card.weight || 1.0) + 1.5;
-        }
-        this.saveState();
-      }
-    }
-
-    this.dispatchEvent(new CustomEvent("stats-updated", { detail: { ...this.stats } }));
-  }
-
-  resetStats() {
-    this.stats = { correct: 0, attempts: 0, streak: 0 };
-    this.dispatchEvent(new CustomEvent("stats-updated", { detail: { ...this.stats } }));
-  }
-
-  appendCards(newCards) {
-    const deck = this.getCurrentDeck();
-    if (!deck) return;
-
-    deck.cards.push(...newCards);
-    this.selectAllUnitsForCurrentDeck();
-    this.saveState();
-    this.dispatchEvent(new CustomEvent("deck-updated"));
-  }
-
-  replaceDecks(newDecks) {
-    this.decks = newDecks;
-    const firstDeckId = Object.keys(this.decks)[0] || "";
-    this.currentDeckId = firstDeckId;
-    this.activeMode = this.decks[firstDeckId]?.defaultMode || "standard";
-    this.resetStats();
-    this.selectAllUnitsForCurrentDeck();
-    this.saveState();
-    this.dispatchEvent(new CustomEvent("deck-changed", { detail: { deckId: firstDeckId } }));
-  }
-
-  async resetToDefaults() {
-    localStorage.removeItem(Store.STORAGE_KEY);
-    await this.loadFromManifest();
-    this.resetStats();
-    this.selectAllUnitsForCurrentDeck();
-    this.dispatchEvent(new CustomEvent("deck-changed", { detail: { deckId: this.currentDeckId } }));
+    return matrix;
   }
 }
+
+export const store = new StateStore();
