@@ -1,89 +1,99 @@
 /**
  * sw.js - SpeedRecall Service Worker
- * Strategy: Cache-first for local static app assets, Network-first for GitHub REST APIs.
+ * Strategy: Cache-first for App Shell, Network-first for Data files
  */
 
-const CACHE_NAME = "speedrecall-v2.1";
+const CACHE_NAME = 'speedrecall-shell-v2';
+const DATA_CACHE_NAME = 'speedrecall-data-v2';
 
-// Static application assets required for full offline function
-const PRECACHE_ASSETS = [
-  "./",
-  "./index.html",
-  "./manifest.webmanifest",
-  "./css/tokens.css",
-  "./css/base.css",
-  "./css/stage.css",
-  "./css/drawer.css",
-  "./js/app.js",
-  "./js/state.js",
-  "./js/engine.js",
-  "./js/normalizer.js",
-  "./js/importer.js",
-  "./js/tv-nav.js",
-  "./js/github-sync.js",
-  "./data/manifest.json",
-  "./data/zh-hsk1.json",
-  "./data/fr-verbs.json"
+const APP_SHELL_ASSETS = [
+  './',
+  './index.html',
+  './manifest.webmanifest',
+  './css/tokens.css',
+  './css/base.css',
+  './css/drawer.css',
+  './css/stage.css',
+  './js/app.js',
+  './js/engine.js',
+  './js/state.js',
+  './js/normalizer.js',
+  './js/importer.js',
+  './js/tv-nav.js',
+  './js/github-sync.js'
 ];
 
-// Install Event: Precaches application shell and default datasets
-self.addEventListener("install", (event) => {
+// Install: Pre-cache App Shell and bypass waiting state
+self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches
-      .open(CACHE_NAME)
-      .then((cache) => cache.addAll(PRECACHE_ASSETS))
-      .then(() => self.skipWaiting())
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(APP_SHELL_ASSETS);
+    })
+  );
+  self.skipWaiting();
+});
+
+// Activate: Prune outdated caches and take immediate control of clients
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) => {
+      return Promise.all(
+        keys.map((key) => {
+          if (key !== CACHE_NAME && key !== DATA_CACHE_NAME) {
+            return caches.delete(key);
+          }
+        })
+      );
+    }).then(() => {
+      return self.clients.claim();
+    })
   );
 });
 
-// Activate Event: Purges outdated cache versions (e.g., speedrecall-v1)
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches
-      .keys()
-      .then((cacheNames) => {
-        return Promise.all(
-          cacheNames.map((name) => {
-            if (name !== CACHE_NAME) {
-              return caches.delete(name);
-            }
-          })
-        );
-      })
-      .then(() => self.clients.claim())
-  );
-});
-
-// Fetch Event: Cache-first for local static files; bypass cache for GitHub API sync requests
-self.addEventListener("fetch", (event) => {
+// Fetch: Differentiated routing based on request target
+self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // Always route GitHub REST API requests directly to the network
-  if (url.hostname === "api.github.com") {
-    event.respondWith(fetch(event.request));
+  // 1. Data endpoints: Network-First with Cache Fallback
+  // Allows new deck additions and edits to reflect dynamically while keeping offline capability
+  if (url.pathname.includes('/data/')) {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const clone = networkResponse.clone();
+            caches.open(DATA_CACHE_NAME).then((cache) => {
+              cache.put(event.request, clone);
+            });
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          return caches.match(event.request);
+        })
+    );
     return;
   }
 
-  // Cache-first, network fallback for app assets
+  // 2. App Shell and Static Assets: Cache-First with Network Fallback
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
         return cachedResponse;
       }
-
       return fetch(event.request).then((networkResponse) => {
-        // Cache valid same-origin GET responses
         if (
-          networkResponse &&
-          networkResponse.status === 200 &&
-          event.request.method === "GET" &&
-          url.origin === self.location.origin
+          !networkResponse ||
+          networkResponse.status !== 200 ||
+          networkResponse.type !== 'basic'
         ) {
-          const responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
+          return networkResponse;
         }
+
+        const clone = networkResponse.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, clone);
+        });
         return networkResponse;
       });
     })
