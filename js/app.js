@@ -1,370 +1,308 @@
 /**
- * js/app.js - Application Orchestrator & UI Binding Layer
- * Bootstraps async manifest storage, hooks the 3-tier review loop,
- * renders DJT character preview pills, and connects GitHub Cloud Sync.
+ * js/app.js
+ * SpeedRecall Application Orchestrator & UI Controller
  */
 
-import { Store } from "./state.js";
-import { RecallEngine } from "./engine.js";
-import { DataImporter } from "./importer.js";
-import { SpatialNavigator } from "./tv-nav.js";
-import { GitHubSync } from "./github-sync.js";
+import { store } from './state.js';
+import { RecallEngine } from './engine.js';
+import { Normalizer } from './normalizer.js';
 
-class AppController {
-  constructor() {
-    this.store = new Store();
-    this.engine = new RecallEngine(this.store);
-    this.spatialNav = new SpatialNavigator("#app");
-    this.ghSync = new GitHubSync(this.store);
+// DOM Element Registry
+const elements = {
+  stage: document.getElementById('stage'),
+  prompt: document.getElementById('cardPrompt'),
+  subtitle: document.getElementById('cardSubtitle'),
+  input: document.getElementById('recallInput'),
+  errorBanner: document.getElementById('errorBanner'),
+  expectedAnswer: document.getElementById('expectedAnswer'),
+  deckSelect: document.getElementById('deckSelect'),
+  modeSelect: document.getElementById('modeSelect'),
+  drawer: document.getElementById('drawer'),
+  drawerToggle: document.getElementById('drawerToggle'),
+  drawerClose: document.getElementById('drawerClose'),
+  matrixContainer: document.getElementById('matrixContainer'),
+  statsActiveCount: document.getElementById('statsActiveCount')
+};
 
-    this.dom = {
-      deckSelect: document.getElementById("deckSelect"),
-      modeSelect: document.getElementById("modeSelect"),
-      btnToggleDrawer: document.getElementById("btnToggleDrawer"),
-      btnCloseDrawer: document.getElementById("btnCloseDrawer"),
-      drawerDialog: document.getElementById("drawerDialog"),
-      unitCheckboxesGrid: document.getElementById("unitCheckboxesGrid"),
-      btnSelectAllUnits: document.getElementById("btnSelectAllUnits"),
-      btnDeselectAllUnits: document.getElementById("btnDeselectAllUnits"),
-      statAccuracy: document.getElementById("statAccuracy"),
-      statStreak: document.getElementById("statStreak"),
-      statPoolSize: document.getElementById("statPoolSize"),
-      flashcard: document.getElementById("flashcard"),
-      cardPrompt: document.getElementById("cardPrompt"),
-      cardSubtitle: document.getElementById("cardSubtitle"),
-      recallInput: document.getElementById("recallInput"),
-      feedbackRegion: document.getElementById("feedbackRegion"),
-      tsvInputArea: document.getElementById("tsvInputArea"),
-      btnImportTSV: document.getElementById("btnImportTSV"),
-      btnExportJSON: document.getElementById("btnExportJSON"),
-      inputFileJSON: document.getElementById("inputFileJSON"),
-      btnResetDefaults: document.getElementById("btnResetDefaults"),
-      // GitHub Cloud Sync Form Controls
-      ghTokenInput: document.getElementById("ghTokenInput"),
-      ghRepoInput: document.getElementById("ghRepoInput"),
-      ghPathInput: document.getElementById("ghPathInput"),
-      btnSaveSyncConfig: document.getElementById("btnSaveSyncConfig"),
-      btnPullGitHub: document.getElementById("btnPullGitHub"),
-      btnPushGitHub: document.getElementById("btnPushGitHub"),
-      syncStatusIndicator: document.getElementById("syncStatusIndicator")
-    };
+// Engine Instance
+const engine = new RecallEngine({
+  normalizer: Normalizer,
+  onCardChange: renderActiveCard,
+  onErrorState: renderErrorState
+});
 
-    this.init();
+// --- UI Rendering Pipelines ---
+
+function renderDeckSelector() {
+  if (!elements.deckSelect) return;
+  const decks = store.getDeckList();
+  const currentActiveId = store.state.activeDeckId;
+
+  elements.deckSelect.innerHTML = '';
+  for (const deck of decks) {
+    const option = document.createElement('option');
+    option.value = deck.id;
+    option.textContent = `${deck.name} (${deck.count})`;
+    if (deck.id === currentActiveId) {
+      option.selected = true;
+    }
+    elements.deckSelect.appendChild(option);
+  }
+}
+
+function renderModeSelector() {
+  if (!elements.modeSelect) return;
+  elements.modeSelect.value = store.state.activeMode || 'standard';
+}
+
+function renderActiveCard(card) {
+  if (!card) {
+    if (elements.prompt) elements.prompt.textContent = '—';
+    if (elements.subtitle) elements.subtitle.textContent = 'No cards available in this pool.';
+    return;
   }
 
-  async init() {
-    this.bindUIEvents();
-    this.bindEngineEvents();
-    this.bindSyncEvents();
-
-    // Asynchronously bootstrap baseline decks from data/manifest.json
-    await this.store.init();
-
-    this.populateDeckSelect();
-    this.populateSyncInputs();
-    this.renderCategoryMatrix();
-    this.updateStatsDisplay();
-    this.engine.nextCard();
+  // Clear input & error banner
+  if (elements.input) {
+    elements.input.value = '';
+    elements.input.classList.remove('input-error');
+  }
+  if (elements.errorBanner) {
+    elements.errorBanner.hidden = true;
   }
 
-  populateDeckSelect() {
-    this.dom.deckSelect.innerHTML = "";
-    Object.entries(this.store.decks).forEach(([id, deck]) => {
-      const opt = document.createElement("option");
-      opt.value = id;
-      opt.textContent = deck.name;
-      this.dom.deckSelect.appendChild(opt);
-    });
+  // Update card content
+  if (elements.prompt) elements.prompt.textContent = card.prompt;
+  if (elements.subtitle) elements.subtitle.textContent = card.subtitle || '';
 
-    this.dom.deckSelect.value = this.store.currentDeckId;
-    this.dom.modeSelect.value = this.store.activeMode;
+  // Update footer statistics
+  if (elements.statsActiveCount) {
+    const pool = store.getActivePool();
+    elements.statsActiveCount.textContent = pool.length;
   }
 
-  populateSyncInputs() {
-    if (!this.dom.ghTokenInput) return;
-    this.dom.ghTokenInput.value = this.ghSync.config.token || "";
-    this.dom.ghRepoInput.value = this.ghSync.config.repo || "";
-    this.dom.ghPathInput.value = this.ghSync.config.filePath || "speedrecall-decks.json";
+  // Focus typing arena
+  focusInput();
+}
+
+function renderErrorState(card, expectedAnswer) {
+  if (elements.errorBanner) {
+    elements.errorBanner.hidden = false;
+  }
+  if (elements.expectedAnswer) {
+    elements.expectedAnswer.textContent = expectedAnswer || (card.answers ? card.answers[0] : '');
+  }
+  if (elements.input) {
+    elements.input.classList.add('input-error');
+  }
+}
+
+function triggerSuccessFlash() {
+  if (!elements.stage) return;
+  elements.stage.classList.remove('stage-flash');
+  // Trigger DOM reflow to re-fire CSS animation
+  void elements.stage.offsetWidth;
+  elements.stage.classList.add('stage-flash');
+}
+
+/**
+ * Renders the DJT Matrix pills in the slide-out drawer
+ */
+function renderDrawerMatrix() {
+  if (!elements.matrixContainer) return;
+  elements.matrixContainer.innerHTML = '';
+
+  const matrix = store.getDeckMatrix();
+  const groups = Object.keys(matrix);
+
+  if (groups.length === 0) {
+    elements.matrixContainer.innerHTML = '<p class="drawer-empty">No cards found in active deck.</p>';
+    return;
   }
 
-  /**
-   * Renders the DJT-style Category Matrix with Dynamic Character Preview Pills
-   */
-  renderCategoryMatrix() {
-    const hierarchy = this.store.getCategoryHierarchy();
-    this.dom.unitCheckboxesGrid.innerHTML = "";
+  for (const groupName of groups) {
+    const groupEl = document.createElement('div');
+    groupEl.className = 'matrix-group';
 
-    for (const [group, units] of Object.entries(hierarchy)) {
-      // Group header tag
-      const groupHeader = document.createElement("div");
-      groupHeader.className = "group-section-title";
-      groupHeader.textContent = group;
-      this.dom.unitCheckboxesGrid.appendChild(groupHeader);
+    const groupTitle = document.createElement('h3');
+    groupTitle.className = 'matrix-group-title';
+    groupTitle.textContent = groupName;
+    groupEl.appendChild(groupTitle);
 
-      for (const [unit, tokens] of Object.entries(units)) {
-        const key = `${group}::${unit}`;
+    const units = matrix[groupName];
+    for (const unitName of Object.keys(units)) {
+      const unitEl = document.createElement('div');
+      unitEl.className = 'matrix-unit';
 
-        const cardTile = document.createElement("div");
-        cardTile.className = "unit-tile";
+      const unitLabel = document.createElement('span');
+      unitLabel.className = 'matrix-unit-label';
+      unitLabel.textContent = unitName;
+      unitEl.appendChild(unitLabel);
 
-        // Unit interactive label & checkbox row
-        const headerRow = document.createElement("label");
-        headerRow.className = "unit-header-row nav-interactive";
+      const pillsContainer = document.createElement('div');
+      pillsContainer.className = 'matrix-pills';
 
-        const checkbox = document.createElement("input");
-        checkbox.type = "checkbox";
-        checkbox.checked = this.store.selectedUnits.has(key);
-        checkbox.dataset.group = group;
-        checkbox.dataset.unit = unit;
-
-        checkbox.addEventListener("change", (e) => {
-          this.store.toggleUnit(group, unit, e.target.checked);
-        });
-
-        const titleSpan = document.createElement("span");
-        titleSpan.className = "unit-title-text";
-        titleSpan.textContent = unit;
-
-        headerRow.appendChild(checkbox);
-        headerRow.appendChild(titleSpan);
-        cardTile.appendChild(headerRow);
-
-        // DJT Character Preview Pills (shows the exact tokens inside this unit)
-        if (Array.isArray(tokens) && tokens.length > 0) {
-          const pillsContainer = document.createElement("div");
-          pillsContainer.className = "unit-preview-tokens";
-
-          tokens.forEach((token) => {
-            const pill = document.createElement("span");
-            pill.className = "token-pill";
-            pill.textContent = token;
-            pillsContainer.appendChild(pill);
-          });
-
-          cardTile.appendChild(pillsContainer);
+      for (const card of units[unitName]) {
+        const pill = document.createElement('span');
+        pill.className = 'matrix-pill';
+        pill.textContent = card.prompt;
+        pill.title = `${card.prompt} - ${card.subtitle || ''} (Weight: ${card.weight})`;
+        
+        // Heatmap indicator: highlight high-error cards
+        if (card.weight > 2.0) {
+          pill.classList.add('pill-heavy');
+        } else if (card.weight <= 0.5) {
+          pill.classList.add('pill-mastered');
         }
 
-        this.dom.unitCheckboxesGrid.appendChild(cardTile);
+        pillsContainer.appendChild(pill);
       }
+
+      unitEl.appendChild(pillsContainer);
+      groupEl.appendChild(unitEl);
+    }
+
+    elements.matrixContainer.appendChild(groupEl);
+  }
+}
+
+function focusInput() {
+  if (elements.input && document.activeElement !== elements.input) {
+    // Only autofocus if user isn't interacting with a select, button, or drawer
+    const isInteractingWithForm = ['SELECT', 'BUTTON', 'A'].includes(document.activeElement?.tagName);
+    if (!isInteractingWithForm && (!elements.drawer || elements.drawer.hidden)) {
+      elements.input.focus();
     }
   }
+}
 
-  updateStatsDisplay() {
-    const { correct, attempts, streak } = this.store.stats;
-    const pct = attempts > 0 ? Math.round((correct / attempts) * 100) : 0;
-    this.dom.statAccuracy.textContent = `${pct}%`;
-    this.dom.statStreak.textContent = streak;
-    this.dom.statPoolSize.textContent = this.store.getActivePool().length;
-  }
+// --- Event Listeners & Input Flow ---
 
-  setSyncStatus(message, status = "info") {
-    if (!this.dom.syncStatusIndicator) return;
-    this.dom.syncStatusIndicator.className = `sync-status-indicator ${status}`;
-    this.dom.syncStatusIndicator.textContent = message;
-  }
+function initEventHandlers() {
+  // 1. Keystroke evaluation loop
+  if (elements.input) {
+    elements.input.addEventListener('input', (e) => {
+      const currentVal = e.target.value;
+      if (engine.isAwaitingErrorAdvance) return;
 
-  bindUIEvents() {
-    // Keep focus inside input when clicking outside interactive elements
-    window.addEventListener("click", (e) => {
-      if (
-        !this.dom.drawerDialog.open &&
-        !e.target.closest("button, select, input, textarea, label, summary, details")
-      ) {
-        this.dom.recallInput.focus();
+      const matched = engine.evaluate(currentVal, store.state.activeMode);
+      if (matched) {
+        triggerSuccessFlash();
+        store.recordResult(matched.id, true);
+        engine.nextCard();
       }
     });
 
-    // Zero-Friction Keystroke Evaluation
-    this.dom.recallInput.addEventListener("input", (e) => {
-      this.engine.evaluateInput(e.target.value);
-    });
-
-    // Enter Key Handler (Surrender / Next error step)
-    this.dom.recallInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        if (this.engine.awaitingErrorAdvance) {
-          this.engine.acknowledgeError();
+    elements.input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (engine.isAwaitingErrorAdvance) {
+          // Acknowledge error reveal and move forward
+          engine.clearErrorAndAdvance();
         } else {
-          this.engine.handleFailure(this.dom.recallInput.value);
+          // Surrender active card
+          const failedCard = engine.getActiveCard();
+          if (failedCard) {
+            store.recordResult(failedCard.id, false);
+            engine.surrenderActiveCard();
+          }
         }
-      }
-    });
-
-    // Deck Selector
-    this.dom.deckSelect.addEventListener("change", (e) => {
-      this.store.setDeck(e.target.value);
-      this.dom.modeSelect.value = this.store.activeMode;
-      this.renderCategoryMatrix();
-    });
-
-    // Mode Selector (3 Universal Tiers)
-    this.dom.modeSelect.addEventListener("change", (e) => {
-      this.store.setMode(e.target.value);
-      this.dom.recallInput.focus();
-    });
-
-    // Drawer Modal Toggle
-    this.dom.btnToggleDrawer.addEventListener("click", () => {
-      this.dom.drawerDialog.showModal();
-      this.dom.btnToggleDrawer.setAttribute("aria-expanded", "true");
-    });
-
-    this.dom.btnCloseDrawer.addEventListener("click", () => {
-      this.dom.drawerDialog.close();
-    });
-
-    this.dom.drawerDialog.addEventListener("close", () => {
-      this.dom.btnToggleDrawer.setAttribute("aria-expanded", "false");
-      this.dom.recallInput.focus();
-    });
-
-    // Matrix Batch Selection
-    this.dom.btnSelectAllUnits.addEventListener("click", () => {
-      this.store.selectAllUnitsForCurrentDeck();
-      this.renderCategoryMatrix();
-    });
-
-    this.dom.btnDeselectAllUnits.addEventListener("click", () => {
-      this.store.deselectAllUnits();
-      this.renderCategoryMatrix();
-    });
-
-    // TSV Batch Importer
-    this.dom.btnImportTSV.addEventListener("click", () => {
-      const raw = this.dom.tsvInputArea.value;
-      if (!raw.trim()) return;
-
-      const { valid, errors } = DataImporter.parseTSV(raw);
-      if (valid.length > 0) {
-        this.store.appendCards(valid);
-        this.renderCategoryMatrix();
-        this.dom.tsvInputArea.value = "";
-        alert(`Successfully imported ${valid.length} card(s).`);
-      }
-
-      if (errors.length > 0) {
-        alert(`Notice:\n${errors.slice(0, 5).join("\n")}${errors.length > 5 ? "\n..." : ""}`);
-      }
-    });
-
-    // JSON Export / Import
-    this.dom.btnExportJSON.addEventListener("click", () => {
-      DataImporter.triggerJSONDownload(this.store.decks);
-    });
-
-    this.dom.inputFileJSON.addEventListener("change", (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const { decks, error } = DataImporter.parseJSON(event.target.result);
-        if (error) {
-          alert(`Import Error: ${error}`);
-          return;
-        }
-        this.store.replaceDecks(decks);
-        this.populateDeckSelect();
-        this.renderCategoryMatrix();
-        alert("Deck library replaced successfully.");
-      };
-      reader.readAsText(file);
-    });
-
-    // Hard Reset
-    this.dom.btnResetDefaults.addEventListener("click", async () => {
-      if (confirm("Reset all decks to defaults? Custom added cards will be erased.")) {
-        await this.store.resetToDefaults();
-        this.populateDeckSelect();
-        this.renderCategoryMatrix();
       }
     });
   }
 
-  bindSyncEvents() {
-    if (!this.dom.btnSaveSyncConfig) return;
+  // 2. Window click auto-refocus
+  window.addEventListener('click', (e) => {
+    const isInteractive = e.target.closest('button, select, input, a, .nav-interactive, #drawer');
+    if (!isInteractive) {
+      focusInput();
+    }
+  });
 
-    this.dom.btnSaveSyncConfig.addEventListener("click", () => {
-      this.ghSync.saveConfig({
-        token: this.dom.ghTokenInput.value.trim(),
-        repo: this.dom.ghRepoInput.value.trim(),
-        filePath: this.dom.ghPathInput.value.trim() || "speedrecall-decks.json"
-      });
-      this.setSyncStatus("GitHub settings saved to local device.", "success");
+  // 3. Deck Selector change
+  if (elements.deckSelect) {
+    elements.deckSelect.addEventListener('change', (e) => {
+      store.setActiveDeck(e.target.value);
     });
+  }
 
-    this.dom.btnPullGitHub.addEventListener("click", async () => {
-      this.setSyncStatus("Connecting to GitHub...", "pending");
-      const res = await this.ghSync.pullFromRemote();
-      if (res.success) {
-        this.populateDeckSelect();
-        this.renderCategoryMatrix();
-        this.setSyncStatus(res.message, "success");
-      } else {
-        this.setSyncStatus(res.message, "error");
-      }
+  // 4. Mode Selector change
+  if (elements.modeSelect) {
+    elements.modeSelect.addEventListener('change', (e) => {
+      store.setEvaluationMode(e.target.value);
     });
+  }
 
-    this.dom.btnPushGitHub.addEventListener("click", async () => {
-      this.setSyncStatus("Pushing to GitHub...", "pending");
-      const res = await this.ghSync.pushToRemote();
-      if (res.success) {
-        this.setSyncStatus(res.message, "success");
+  // 5. Drawer Controls
+  if (elements.drawerToggle && elements.drawer) {
+    elements.drawerToggle.addEventListener('click', () => {
+      elements.drawer.hidden = !elements.drawer.hidden;
+      if (!elements.drawer.hidden) {
+        renderDrawerMatrix();
       } else {
-        this.setSyncStatus(res.message, "error");
+        focusInput();
       }
     });
   }
 
-  bindEngineEvents() {
-    this.engine.addEventListener("card-changed", (e) => {
-      const { card, poolSize } = e.detail;
-      this.dom.statPoolSize.textContent = poolSize;
-      this.dom.recallInput.value = "";
-      this.dom.flashcard.classList.remove("state-success", "state-error");
-      this.dom.feedbackRegion.textContent = "";
-      this.dom.feedbackRegion.classList.remove("is-error");
-
-      if (!card) {
-        this.dom.cardPrompt.textContent = "—";
-        this.dom.cardSubtitle.textContent = "No units selected. Open categories to pick a unit.";
-        this.dom.recallInput.disabled = true;
-        return;
-      }
-
-      this.dom.recallInput.disabled = false;
-      this.dom.cardPrompt.textContent = card.prompt;
-      this.dom.cardSubtitle.textContent = card.subtitle || "";
-
-      // Adapt direction and script attributes
-      const isArabic = /[\u0600-\u06FF]/.test(card.prompt);
-      this.dom.cardPrompt.setAttribute("dir", isArabic ? "rtl" : "ltr");
-      this.dom.cardPrompt.setAttribute("lang", isArabic ? "ar" : "zh");
-
-      this.dom.recallInput.focus();
-    });
-
-    this.engine.addEventListener("evaluation-success", () => {
-      this.dom.flashcard.classList.remove("state-error");
-      this.dom.flashcard.classList.add("state-success");
-      this.updateStatsDisplay();
-    });
-
-    this.engine.addEventListener("evaluation-failure", (e) => {
-      const { expected } = e.detail;
-      this.dom.flashcard.classList.add("state-error");
-      this.dom.feedbackRegion.classList.add("is-error");
-      this.dom.feedbackRegion.textContent = `Target: ${expected} (Press Enter to continue)`;
-      this.updateStatsDisplay();
-    });
-
-    this.store.addEventListener("stats-updated", () => {
-      this.updateStatsDisplay();
+  if (elements.drawerClose && elements.drawer) {
+    elements.drawerClose.addEventListener('click', () => {
+      elements.drawer.hidden = true;
+      focusInput();
     });
   }
 }
 
-// Bootstrap once DOM content is ready
-window.addEventListener("DOMContentLoaded", () => {
-  new AppController();
+// --- Store Lifecycle Event Bindings ---
+
+store.addEventListener('deck-reconciled', () => {
+  renderDeckSelector();
+  renderDrawerMatrix();
+  engine.setPool(store.getActivePool());
 });
+
+store.addEventListener('deck-changed', (e) => {
+  renderDeckSelector();
+  renderModeSelector();
+  renderDrawerMatrix();
+  engine.setPool(store.getActivePool());
+});
+
+store.addEventListener('mode-changed', () => {
+  renderModeSelector();
+});
+
+store.addEventListener('card-weight-updated', () => {
+  // Update matrix view if drawer is open
+  if (elements.drawer && !elements.drawer.hidden) {
+    renderDrawerMatrix();
+  }
+});
+
+// --- Application Bootstrapping ---
+
+async function bootstrap() {
+  initEventHandlers();
+  
+  // Register service worker if available
+  if ('serviceWorker' in navigator) {
+    try {
+      await navigator.serviceWorker.register('./sw.js');
+    } catch (err) {
+      console.warn('[PWA] Service Worker registration failed:', err);
+    }
+  }
+
+  // Ingest data and reconcile
+  await store.init();
+
+  renderDeckSelector();
+  renderModeSelector();
+  renderDrawerMatrix();
+
+  // Load cards into roulette wheel
+  engine.setPool(store.getActivePool());
+  focusInput();
+}
+
+bootstrap();
