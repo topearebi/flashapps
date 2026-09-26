@@ -804,6 +804,15 @@
       "weight": 1.0
     },
     {
+      "id": "zh-rad-090",
+      "group": "Strokes 4–6",
+      "unit": "4 Strokes",
+      "prompt": "爿",
+      "subtitle": "half of a tree trunk (qiáng)",
+      "answers": ["half of a tree trunk", "qiáng", "qiang2"],
+      "weight": 1.0
+    },
+    {
       "id": "zh-rad-091",
       "group": "Strokes 4–6",
       "unit": "4 Strokes",
@@ -822,6 +831,1095 @@
       "weight": 1.0
     },
     {
+      "id": "zh-rad-093",
+      "group": "Strokes 4–6",
+      "unit": "4 Strokes",
+      "prompt": "牛",
+      "subtitle": "cow (niú) · var: 牜",
+      "answers": ["cow", "niú", "niu2"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-094",
+      "group": "Strokes 1–3",
+      "unit": "3 Strokes",
+      "prompt": "犭",
+      "subtitle": "dog (quǎn) · var: 犬",
+      "answers": ["dog", "quǎn", "quan3"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-095",
+      "group": "Strokes 4–6",
+      "unit": "5 Strokes",
+      "prompt": "玄",
+      "subtitle": "profound (xuán)",
+      "answers": ["profound", "xuán", "xuan2"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-096",
+      "group": "Strokes 4–6",
+      "unit": "5 Strokes",
+      "prompt": "玉",
+      "subtitle": "jade (yù) · var: 王",
+      "answers": ["jade", "yù", "yu4"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-097",
+      "group": "Strokes 4–6",
+      "unit": "5 Strokes",
+      "prompt": "瓜",
+      "subtitle": "melon (guā)",
+      "answers": ["melon", "guā", "gua1"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-098",
+      "group": "Strokes 4–6",
+      "unit": "5 Strokes",
+      "prompt": "瓦",
+      "subtitle": "tile (wǎ)",
+      "answers": ["tile", "wǎ", "wa3"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-099",
+      "group": "Strokes 4–6",
+      "unit": "5 Strokes",
+      "prompt": "甘",
+      "subtitle": "sweet (gān)",
+      "answers": ["sweet", "gān", "gan1"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-100",
+      "group": "Strokes 4–6",
+      "unit": "5 Strokes",
+      "prompt": "生",
+      "subtitle": "life (shēng)",
+      "answers": ["life", "shēng", "sheng1"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-101",
+      "group": "Strokes 4–6",
+      "unit": "5 Strokes",
+      "prompt": "用",
+      "subtitle": "use (yòng)",
+      "answers": ["use", "yòng", "yong4"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-102",
+      "group": "Strokes 4–6",
+      "unit": "5 Strokes",
+      "prompt": "田",
+      "subtitle": "field (tián)",
+      "answers": ["field", "tián", "tian2"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-103",
+      "group": "Strokes 4–6",
+      "unit": "5 Strokes",
+      "prompt": "疋",
+      "subtitle": "cloth (pǐ)",
+      "answers": ["cloth", "pǐ", "pi3"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-104",
+      "group": "Strokes 4–6",
+      "unit": "5 Strokes",
+      "prompt": "疒",
+      "subtitle": "ill (bìng)",
+      "answers": ["ill", "bìng", "bing4"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-105",
+      "group": "Strokes 4–6",
+      "unit": "5 Strokes",
+      "prompt": "癶",
+      "subtitle": "foot steps (bō)",
+      "answers": ["foot steps", "bō", "bo1"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-106",
+      "group": "Strokes 4–6",
+      "unit": "5 Strokes",
+      "prompt": "白",
+      "subtitle": "white (bái)",
+      "answers": ["white", "bái", "bai2"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-107",
+      "group": "Strokes 4–6",
+      "unit": "5 Strokes",
+      "prompt": "皮",
+      "subtitle": "skin (pí)",
+      "answers": ["skin", "pí", "pi2"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-108",
+      "group": "Strokes 4–6",
+      "unit": "5 Strokes",
+      "prompt": "皿",
+      "subtitle": "dish (mǐn)",
+      "answers": ["dish", "mǐn", "min3"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-109",
+      "group": "Strokes 4–6",
+      "unit": "5 Strokes",
+      "prompt": "目",
+      "subtitle": "eye (mù)",
+      "answers": ["eye", "mù", "mu4"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-110",
+      "group": "Strokes 4–6",
+      "unit": "5 Strokes",
+      "prompt": "矛",
+      "subtitle": "spear (máo)",
+      "answers": ["spear", "máo", "mao2"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-111",
+      "group": "Strokes 4–6",
+      "unit": "5 Strokes",
+      "prompt": "矢",
+      "subtitle": "arrow (shǐ)",
+      "answers": ["arrow", "shǐ", "shi3"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-112",
+      "group": "Strokes 4–6",
+      "unit": "5 Strokes",
+      "prompt": "石",
+      "subtitle": "stone (shí)",
+      "answers": ["stone", "shí", "shi2"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-113",
+      "group": "Strokes 4–6",
+      "unit": "5 Strokes",
+      "prompt": "示",
+      "subtitle": "spirit (shì) · var: 礻",
+      "answers": ["spirit", "shì", "shi4"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-114",
+      "group": "Strokes 4–6",
+      "unit": "4 Strokes",
+      "prompt": "禸",
+      "subtitle": "track (róu)",
+      "answers": ["track", "róu", "rou2"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-115",
+      "group": "Strokes 4–6",
+      "unit": "5 Strokes",
+      "prompt": "禾",
+      "subtitle": "grain (hé)",
+      "answers": ["grain", "hé", "he2"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-116",
+      "group": "Strokes 4–6",
+      "unit": "5 Strokes",
+      "prompt": "穴",
+      "subtitle": "cave (xuè)",
+      "answers": ["cave", "xuè", "xue4"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-117",
+      "group": "Strokes 4–6",
+      "unit": "5 Strokes",
+      "prompt": "立",
+      "subtitle": "stand (lì)",
+      "answers": ["stand", "lì", "li4"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-118",
+      "group": "Strokes 4–6",
+      "unit": "6 Strokes",
+      "prompt": "竹",
+      "subtitle": "bamboo (zhú)",
+      "answers": ["bamboo", "zhú", "zhu2"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-119",
+      "group": "Strokes 4–6",
+      "unit": "6 Strokes",
+      "prompt": "米",
+      "subtitle": "rice (mǐ)",
+      "answers": ["rice", "mǐ", "mi3"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-120",
+      "group": "Strokes 1–3",
+      "unit": "3 Strokes",
+      "prompt": "纟",
+      "subtitle": "silk (sī) · var: 糸",
+      "answers": ["silk", "sī", "si1"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-121",
+      "group": "Strokes 4–6",
+      "unit": "6 Strokes",
+      "prompt": "缶",
+      "subtitle": "jar (fǒu)",
+      "answers": ["jar", "fǒu", "fou3"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-122",
+      "group": "Strokes 4–6",
+      "unit": "6 Strokes",
+      "prompt": "网",
+      "subtitle": "net (wǎng) · var: 罒",
+      "answers": ["net", "wǎng", "wang3"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-123",
+      "group": "Strokes 4–6",
+      "unit": "6 Strokes",
+      "prompt": "羊",
+      "subtitle": "sheep (yáng)",
+      "answers": ["sheep", "yáng", "yang2"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-124",
+      "group": "Strokes 4–6",
+      "unit": "6 Strokes",
+      "prompt": "羽",
+      "subtitle": "feather (yǔ)",
+      "answers": ["feather", "yǔ", "yu3"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-125",
+      "group": "Strokes 4–6",
+      "unit": "6 Strokes",
+      "prompt": "老",
+      "subtitle": "old (lǎo)",
+      "answers": ["old", "lǎo", "lao3"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-126",
+      "group": "Strokes 4–6",
+      "unit": "6 Strokes",
+      "prompt": "而",
+      "subtitle": "and (ér)",
+      "answers": ["and", "ér", "er2"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-127",
+      "group": "Strokes 4–6",
+      "unit": "6 Strokes",
+      "prompt": "耒",
+      "subtitle": "plow (lěi)",
+      "answers": ["plow", "lěi", "lei3"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-128",
+      "group": "Strokes 4–6",
+      "unit": "6 Strokes",
+      "prompt": "耳",
+      "subtitle": "ear (ěr)",
+      "answers": ["ear", "ěr", "er3"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-129",
+      "group": "Strokes 4–6",
+      "unit": "6 Strokes",
+      "prompt": "聿",
+      "subtitle": "brush (yù)",
+      "answers": ["brush", "yù", "yu4"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-130",
+      "group": "Strokes 4–6",
+      "unit": "6 Strokes",
+      "prompt": "肉",
+      "subtitle": "meat (ròu)",
+      "answers": ["meat", "ròu", "rou4"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-131",
+      "group": "Strokes 4–6",
+      "unit": "6 Strokes",
+      "prompt": "臣",
+      "subtitle": "minister (chén)",
+      "answers": ["minister", "chén", "chen2"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-132",
+      "group": "Strokes 4–6",
+      "unit": "6 Strokes",
+      "prompt": "自",
+      "subtitle": "oneself (zì)",
+      "answers": ["oneself", "zì", "zi4"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-133",
+      "group": "Strokes 4–6",
+      "unit": "6 Strokes",
+      "prompt": "至",
+      "subtitle": "arrive (zhì)",
+      "answers": ["arrive", "zhì", "zhi4"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-134",
+      "group": "Strokes 4–6",
+      "unit": "6 Strokes",
+      "prompt": "臼",
+      "subtitle": "mortar (jiù)",
+      "answers": ["mortar", "jiù", "jiu4"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-135",
+      "group": "Strokes 4–6",
+      "unit": "6 Strokes",
+      "prompt": "舌",
+      "subtitle": "tongue (shé)",
+      "answers": ["tongue", "shé", "she2"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-136",
+      "group": "Strokes 4–6",
+      "unit": "6 Strokes",
+      "prompt": "舛",
+      "subtitle": "contrary (chuǎn)",
+      "answers": ["contrary", "chuǎn", "chuan3"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-137",
+      "group": "Strokes 4–6",
+      "unit": "6 Strokes",
+      "prompt": "舟",
+      "subtitle": "boat (zhōu)",
+      "answers": ["boat", "zhōu", "zhou1"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-138",
+      "group": "Strokes 4–6",
+      "unit": "6 Strokes",
+      "prompt": "艮",
+      "subtitle": "mountain (gèn)",
+      "answers": ["mountain", "gèn", "gen4"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-139",
+      "group": "Strokes 4–6",
+      "unit": "6 Strokes",
+      "prompt": "色",
+      "subtitle": "color (sè)",
+      "answers": ["color", "sè", "se4"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-140",
+      "group": "Strokes 1–3",
+      "unit": "3 Strokes",
+      "prompt": "艹",
+      "subtitle": "grass (cǎo)",
+      "answers": ["grass", "cǎo", "cao3"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-141",
+      "group": "Strokes 4–6",
+      "unit": "6 Strokes",
+      "prompt": "虍",
+      "subtitle": "tiger (hǔ)",
+      "answers": ["tiger", "hǔ", "hu3"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-142",
+      "group": "Strokes 4–6",
+      "unit": "6 Strokes",
+      "prompt": "虫",
+      "subtitle": "insect (chóng)",
+      "answers": ["insect", "chóng", "chong2"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-143",
+      "group": "Strokes 4–6",
+      "unit": "6 Strokes",
+      "prompt": "血",
+      "subtitle": "blood (xuè)",
+      "answers": ["blood", "xuè", "xue4"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-144",
+      "group": "Strokes 4–6",
+      "unit": "6 Strokes",
+      "prompt": "行",
+      "subtitle": "walk (xíng)",
+      "answers": ["walk", "xíng", "xing2"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-145",
+      "group": "Strokes 4–6",
+      "unit": "6 Strokes",
+      "prompt": "衣",
+      "subtitle": "clothes (yī) · var: 衤",
+      "answers": ["clothes", "yī", "yi1"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-146",
+      "group": "Strokes 4–6",
+      "unit": "6 Strokes",
+      "prompt": "西",
+      "subtitle": "west (xī) · var: 覀",
+      "answers": ["west", "xī", "xi1"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-147",
+      "group": "Strokes 4–6",
+      "unit": "4 Strokes",
+      "prompt": "见",
+      "subtitle": "see (jiàn) · var: 見",
+      "answers": ["see", "jiàn", "jian4"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-148",
+      "group": "Strokes 7–10",
+      "unit": "7 Strokes",
+      "prompt": "角",
+      "subtitle": "horn (jiǎo)",
+      "answers": ["horn", "jiǎo", "jiao3"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-149",
+      "group": "Strokes 1–3",
+      "unit": "2 Strokes",
+      "prompt": "讠",
+      "subtitle": "speech (yán) · var: 言",
+      "answers": ["speech", "yán", "yan2"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-150",
+      "group": "Strokes 7–10",
+      "unit": "7 Strokes",
+      "prompt": "谷",
+      "subtitle": "valley (gǔ)",
+      "answers": ["valley", "gǔ", "gu3"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-151",
+      "group": "Strokes 7–10",
+      "unit": "7 Strokes",
+      "prompt": "豆",
+      "subtitle": "bean (dòu)",
+      "answers": ["bean", "dòu", "dou4"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-152",
+      "group": "Strokes 7–10",
+      "unit": "7 Strokes",
+      "prompt": "豕",
+      "subtitle": "pig (shǐ)",
+      "answers": ["pig", "shǐ", "shi3"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-153",
+      "group": "Strokes 7–10",
+      "unit": "7 Strokes",
+      "prompt": "豸",
+      "subtitle": "badger (zhì)",
+      "answers": ["badger", "zhì", "zhi4"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-154",
+      "group": "Strokes 4–6",
+      "unit": "4 Strokes",
+      "prompt": "贝",
+      "subtitle": "shell (bèi) · var: 貝",
+      "answers": ["shell", "bèi", "bei4"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-155",
+      "group": "Strokes 7–10",
+      "unit": "7 Strokes",
+      "prompt": "赤",
+      "subtitle": "red (chì)",
+      "answers": ["red", "chì", "chi4"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-156",
+      "group": "Strokes 7–10",
+      "unit": "7 Strokes",
+      "prompt": "走",
+      "subtitle": "walk (zǒu)",
+      "answers": ["walk", "zǒu", "zou3"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-157",
+      "group": "Strokes 7–10",
+      "unit": "7 Strokes",
+      "prompt": "足",
+      "subtitle": "foot (zú)",
+      "answers": ["foot", "zú", "zu2"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-158",
+      "group": "Strokes 7–10",
+      "unit": "7 Strokes",
+      "prompt": "身",
+      "subtitle": "body (shēn)",
+      "answers": ["body", "shēn", "shen1"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-159",
+      "group": "Strokes 4–6",
+      "unit": "4 Strokes",
+      "prompt": "车",
+      "subtitle": "cart (chē) · var: 車",
+      "answers": ["cart", "chē", "che1"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-160",
+      "group": "Strokes 7–10",
+      "unit": "7 Strokes",
+      "prompt": "辛",
+      "subtitle": "bitter (xīn)",
+      "answers": ["bitter", "xīn", "xin1"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-161",
+      "group": "Strokes 7–10",
+      "unit": "7 Strokes",
+      "prompt": "辰",
+      "subtitle": "morning (chén)",
+      "answers": ["morning", "chén", "chen2"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-162",
+      "group": "Strokes 1–3",
+      "unit": "3 Strokes",
+      "prompt": "辶",
+      "subtitle": "walk (chuò)",
+      "answers": ["walk", "chuò", "chuo4"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-163",
+      "group": "Strokes 7–10",
+      "unit": "7 Strokes",
+      "prompt": "邑",
+      "subtitle": "city (yì) · var: 阝",
+      "answers": ["city", "yì", "yi4"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-164",
+      "group": "Strokes 7–10",
+      "unit": "7 Strokes",
+      "prompt": "酉",
+      "subtitle": "wine (yǒu)",
+      "answers": ["wine", "yǒu", "you3"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-165",
+      "group": "Strokes 7–10",
+      "unit": "7 Strokes",
+      "prompt": "釆",
+      "subtitle": "distinguish (biàn)",
+      "answers": ["distinguish", "biàn", "bian4"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-166",
+      "group": "Strokes 7–10",
+      "unit": "7 Strokes",
+      "prompt": "里",
+      "subtitle": "village (lǐ)",
+      "answers": ["village", "lǐ", "li3"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-167",
+      "group": "Strokes 4–6",
+      "unit": "5 Strokes",
+      "prompt": "钅",
+      "subtitle": "metal (jīn) · var: 金",
+      "answers": ["metal", "jīn", "jin1"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-168",
+      "group": "Strokes 4–6",
+      "unit": "4 Strokes",
+      "prompt": "长",
+      "subtitle": "long (cháng) · var: 長",
+      "answers": ["long", "cháng", "chang2"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-169",
+      "group": "Strokes 1–3",
+      "unit": "3 Strokes",
+      "prompt": "门",
+      "subtitle": "gate (mén) · var: 門",
+      "answers": ["gate", "mén", "men2"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-170",
+      "group": "Strokes 7–10",
+      "unit": "8 Strokes",
+      "prompt": "阜",
+      "subtitle": "mound (fù) · var: 阝",
+      "answers": ["mound", "fù", "fu4"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-171",
+      "group": "Strokes 7–10",
+      "unit": "8 Strokes",
+      "prompt": "隶",
+      "subtitle": "slave (lì)",
+      "answers": ["slave", "lì", "li4"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-172",
+      "group": "Strokes 7–10",
+      "unit": "8 Strokes",
+      "prompt": "隹",
+      "subtitle": "short-tailed bird (zhuī)",
+      "answers": ["short-tailed bird", "zhuī", "zhui1"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-173",
+      "group": "Strokes 7–10",
+      "unit": "8 Strokes",
+      "prompt": "雨",
+      "subtitle": "rain (yǔ)",
+      "answers": ["rain", "yǔ", "yu3"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-174",
+      "group": "Strokes 7–10",
+      "unit": "8 Strokes",
+      "prompt": "青",
+      "subtitle": "blue (qīng)",
+      "answers": ["blue", "qīng", "qing1"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-175",
+      "group": "Strokes 7–10",
+      "unit": "8 Strokes",
+      "prompt": "非",
+      "subtitle": "wrong (fēi)",
+      "answers": ["wrong", "fēi", "fei1"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-176",
+      "group": "Strokes 7–10",
+      "unit": "9 Strokes",
+      "prompt": "面",
+      "subtitle": "face (miàn)",
+      "answers": ["face", "miàn", "mian4"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-177",
+      "group": "Strokes 7–10",
+      "unit": "9 Strokes",
+      "prompt": "革",
+      "subtitle": "leather (gé)",
+      "answers": ["leather", "gé", "ge2"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-178",
+      "group": "Strokes 4–6",
+      "unit": "4 Strokes",
+      "prompt": "韦",
+      "subtitle": "soft leather (wěi) · var: 韋",
+      "answers": ["soft leather", "wěi", "wei3"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-179",
+      "group": "Strokes 7–10",
+      "unit": "9 Strokes",
+      "prompt": "韭",
+      "subtitle": "leek (jiǔ)",
+      "answers": ["leek", "jiǔ", "jiu3"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-180",
+      "group": "Strokes 7–10",
+      "unit": "9 Strokes",
+      "prompt": "音",
+      "subtitle": "sound (yīn)",
+      "answers": ["sound", "yīn", "yin1"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-181",
+      "group": "Strokes 4–6",
+      "unit": "6 Strokes",
+      "prompt": "页",
+      "subtitle": "page (yè) · var: 頁",
+      "answers": ["page", "yè", "ye4"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-182",
+      "group": "Strokes 4–6",
+      "unit": "4 Strokes",
+      "prompt": "风",
+      "subtitle": "wind (fēng) · var: 風",
+      "answers": ["wind", "fēng", "feng1"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-183",
+      "group": "Strokes 4–6",
+      "unit": "4 Strokes",
+      "prompt": "飞",
+      "subtitle": "fly (fēi) · var: 飛",
+      "answers": ["fly", "fēi", "fei1"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-184",
+      "group": "Strokes 1–3",
+      "unit": "3 Strokes",
+      "prompt": "饣",
+      "subtitle": "eat (shí) · var: 飠 食",
+      "answers": ["eat", "shí", "shi2"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-185",
+      "group": "Strokes 7–10",
+      "unit": "9 Strokes",
+      "prompt": "首",
+      "subtitle": "head (shǒu)",
+      "answers": ["head", "shǒu", "shou3"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-186",
+      "group": "Strokes 7–10",
+      "unit": "9 Strokes",
+      "prompt": "香",
+      "subtitle": "fragrant (xiāng)",
+      "answers": ["fragrant", "xiāng", "xiang1"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-187",
+      "group": "Strokes 1–3",
+      "unit": "3 Strokes",
+      "prompt": "马",
+      "subtitle": "horse (mǎ) · var: 馬",
+      "answers": ["horse", "mǎ", "ma3"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-188",
+      "group": "Strokes 7–10",
+      "unit": "9 Strokes",
+      "prompt": "骨",
+      "subtitle": "bone (gǔ)",
+      "answers": ["bone", "gǔ", "gu3"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-189",
+      "group": "Strokes 7–10",
+      "unit": "10 Strokes",
+      "prompt": "高",
+      "subtitle": "high (gāo)",
+      "answers": ["high", "gāo", "gao1"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-190",
+      "group": "Strokes 7–10",
+      "unit": "10 Strokes",
+      "prompt": "髟",
+      "subtitle": "long hair (biāo)",
+      "answers": ["long hair", "biāo", "biao1"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-191",
+      "group": "Strokes 7–10",
+      "unit": "10 Strokes",
+      "prompt": "鬥",
+      "subtitle": "fight (dòu)",
+      "answers": ["fight", "dòu", "dou4"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-192",
+      "group": "Strokes 7–10",
+      "unit": "10 Strokes",
+      "prompt": "鬯",
+      "subtitle": "sacrificial wine (chàng)",
+      "answers": ["sacrificial wine", "chàng", "chang4"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-193",
+      "group": "Strokes 7–10",
+      "unit": "10 Strokes",
+      "prompt": "鬲",
+      "subtitle": "cauldron (lì)",
+      "answers": ["cauldron", "lì", "li4"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-194",
+      "group": "Strokes 7–10",
+      "unit": "9 Strokes",
+      "prompt": "鬼",
+      "subtitle": "ghost (guǐ)",
+      "answers": ["ghost", "guǐ", "gui3"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-195",
+      "group": "Strokes 7–10",
+      "unit": "8 Strokes",
+      "prompt": "鱼",
+      "subtitle": "fish (yú) · var: 魚",
+      "answers": ["fish", "yú", "yu2"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-196",
+      "group": "Strokes 4–6",
+      "unit": "5 Strokes",
+      "prompt": "鸟",
+      "subtitle": "bird (niǎo) · var: 鳥",
+      "answers": ["bird", "niǎo", "niao3"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-197",
+      "group": "Strokes 7–10",
+      "unit": "7 Strokes",
+      "prompt": "卤",
+      "subtitle": "salty (lǔ)",
+      "answers": ["salty", "lǔ", "lu3"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-198",
+      "group": "Strokes 11–17",
+      "unit": "11 Strokes",
+      "prompt": "鹿",
+      "subtitle": "deer (lù)",
+      "answers": ["deer", "lù", "lu4"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-199",
+      "group": "Strokes 7–10",
+      "unit": "7 Strokes",
+      "prompt": "麦",
+      "subtitle": "wheat (mài) · var: 麥",
+      "answers": ["wheat", "mài", "mai4"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-200",
+      "group": "Strokes 11–17",
+      "unit": "11 Strokes",
+      "prompt": "麻",
+      "subtitle": "hemp (má)",
+      "answers": ["hemp", "má", "ma2"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-201",
+      "group": "Strokes 11–17",
+      "unit": "11 Strokes",
+      "prompt": "黄",
+      "subtitle": "yellow (huáng)",
+      "answers": ["yellow", "huáng", "huang2"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-202",
+      "group": "Strokes 11–17",
+      "unit": "12 Strokes",
+      "prompt": "黍",
+      "subtitle": "millet (shǔ)",
+      "answers": ["millet", "shǔ", "shu3"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-203",
+      "group": "Strokes 11–17",
+      "unit": "12 Strokes",
+      "prompt": "黑",
+      "subtitle": "black (hēi)",
+      "answers": ["black", "hēi", "hei1"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-204",
+      "group": "Strokes 11–17",
+      "unit": "12 Strokes",
+      "prompt": "黹",
+      "subtitle": "embroidery (zhǐ)",
+      "answers": ["embroidery", "zhǐ", "zhi3"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-205",
+      "group": "Strokes 7–10",
+      "unit": "8 Strokes",
+      "prompt": "黾",
+      "subtitle": "frog (mǐn) · var: 黽",
+      "answers": ["frog", "mǐn", "min3"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-206",
+      "group": "Strokes 11–17",
+      "unit": "12 Strokes",
+      "prompt": "鼎",
+      "subtitle": "tripod (dǐng)",
+      "answers": ["tripod", "dǐng", "ding3"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-207",
+      "group": "Strokes 11–17",
+      "unit": "13 Strokes",
+      "prompt": "鼓",
+      "subtitle": "drum (gǔ)",
+      "answers": ["drum", "gǔ", "gu3"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-208",
+      "group": "Strokes 11–17",
+      "unit": "13 Strokes",
+      "prompt": "鼠",
+      "subtitle": "rat (shǔ)",
+      "answers": ["rat", "shǔ", "shu3"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-209",
+      "group": "Strokes 11–17",
+      "unit": "14 Strokes",
+      "prompt": "鼻",
+      "subtitle": "nose (bí)",
+      "answers": ["nose", "bí", "bi2"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-210",
+      "group": "Strokes 4–6",
+      "unit": "6 Strokes",
+      "prompt": "齐",
+      "subtitle": "even (qí) · var: 齊",
+      "answers": ["even", "qí", "qi2"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-211",
+      "group": "Strokes 7–10",
+      "unit": "8 Strokes",
+      "prompt": "齿",
+      "subtitle": "tooth (chǐ) · var: 齒",
+      "answers": ["tooth", "chǐ", "chi3"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-212",
+      "group": "Strokes 4–6",
+      "unit": "5 Strokes",
+      "prompt": "龙",
+      "subtitle": "dragon (lóng) · var: 龍",
+      "answers": ["dragon", "lóng", "long2"],
+      "weight": 1.0
+    },
+    {
+      "id": "zh-rad-213",
+      "group": "Strokes 7–10",
+      "unit": "7 Strokes",
+      "prompt": "龟",
+      "subtitle": "turtle (guī) · var: 龜",
+      "answers": ["turtle", "guī", "gui1"],
+      "weight": 1.0
+    },
+    {
       "id": "zh-rad-214",
       "group": "Strokes 11–17",
       "unit": "17 Strokes",
@@ -831,4 +1929,4 @@
       "weight": 1.0
     }
   ]
-} 
+}
