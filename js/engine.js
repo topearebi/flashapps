@@ -1,148 +1,134 @@
 /**
- * js/engine.js - SpeedRecall Review Engine
- * Orchestrates:
- *  - Deterministic fitness-proportionate card selection (roulette sampling)
- *  - Immediate keystroke matching via Normalizer
- *  - Error state pauses and explicit card advancement
+ * js/engine.js
+ * SpeedRecall Weighted Roulette Sampling Engine
  */
 
-import { Normalizer } from "./normalizer.js";
+export class RecallEngine {
+  constructor({ normalizer, onCardChange, onErrorState }) {
+    this.normalizer = normalizer;
+    this.onCardChange = onCardChange || (() => {});
+    this.onErrorState = onErrorState || (() => {});
 
-export class RecallEngine extends EventTarget {
-  constructor(store) {
-    super();
-    this.store = store;
+    this.pool = [];
     this.activeCard = null;
-    this.awaitingErrorAdvance = false;
-
-    // React to category or deck mutations from the store
-    this.store.addEventListener("categories-changed", () => this.handlePoolChange());
-    this.store.addEventListener("deck-changed", () => this.handlePoolChange());
-    this.store.addEventListener("deck-updated", () => this.handlePoolChange());
+    this.previousCardId = null;
+    this.isAwaitingErrorAdvance = false;
   }
 
   /**
-   * Samples the next card using fitness-proportionate roulette selection.
-   * Cards with higher error weights have a proportionally higher probability of appearing.
-   * Avoids immediate consecutive repetition when the active pool has more than 1 card.
-   *
-   * @returns {Object|null}
+   * Sets or refreshes the active card pool.
    */
-  pickCard() {
-    const pool = this.store.getActivePool();
-    if (!pool || pool.length === 0) return null;
-    if (pool.length === 1) return pool[0];
+  setPool(cards = []) {
+    this.pool = Array.isArray(cards) ? cards : [];
+    this.isAwaitingErrorAdvance = false;
 
-    const totalWeight = pool.reduce((acc, c) => acc + (c.weight || 1.0), 0);
-    let randomSample = Math.random() * totalWeight;
-
-    for (const card of pool) {
-      randomSample -= (card.weight || 1.0);
-      if (randomSample <= 0) {
-        // Guard against direct immediate repeats
-        if (this.activeCard && card.id === this.activeCard.id) {
-          continue;
-        }
-        return card;
-      }
+    if (this.pool.length === 0) {
+      this.activeCard = null;
+      this.onCardChange(null);
+      return;
     }
 
-    // Fallback if loop finishes due to floating point precision
-    return pool.find((c) => !this.activeCard || c.id !== this.activeCard.id) || pool[0];
+    // If current card is no longer in the new pool, select a new one
+    if (!this.activeCard || !this.pool.some((c) => c.id === this.activeCard.id)) {
+      this.nextCard();
+    }
+  }
+
+  getActiveCard() {
+    return this.activeCard;
   }
 
   /**
-   * Advances the engine to the next card in the active pool
+   * Samples next card using fitness-proportionate roulette selection.
+   * Prevents immediate back-to-back repetition when pool size >= 2.
    */
   nextCard() {
-    this.awaitingErrorAdvance = false;
-    this.activeCard = this.pickCard();
+    if (this.pool.length === 0) {
+      this.activeCard = null;
+      this.onCardChange(null);
+      return;
+    }
 
-    this.dispatchEvent(new CustomEvent("card-changed", {
-      detail: {
-        card: this.activeCard,
-        poolSize: this.store.getActivePool().length
+    if (this.pool.length === 1) {
+      this.activeCard = this.pool[0];
+      this.onCardChange(this.activeCard);
+      return;
+    }
+
+    let candidate = null;
+    let attempts = 0;
+
+    // Up to 5 attempts to avoid immediate duplicate draw
+    while (attempts < 5) {
+      candidate = this._rouletteSample();
+      if (!this.previousCardId || candidate.id !== this.previousCardId) {
+        break;
       }
-    }));
-  }
-
-  /**
-   * Re-evaluates current card validity when categories or decks change
-   */
-  handlePoolChange() {
-    const pool = this.store.getActivePool();
-    
-    // If current card is no longer in the active pool, pick a new one
-    if (!this.activeCard || !pool.some((c) => c.id === this.activeCard.id)) {
-      this.nextCard();
-    } else {
-      this.dispatchEvent(new CustomEvent("pool-updated", {
-        detail: { poolSize: pool.length }
-      }));
-    }
-  }
-
-  /**
-   * Evaluates input in real-time on every keystroke
-   * @param {string} rawInput
-   * @returns {boolean} Whether an immediate match occurred
-   */
-  evaluateInput(rawInput) {
-    if (this.awaitingErrorAdvance || !this.activeCard) {
-      return false;
+      attempts++;
     }
 
-    const mode = this.store.activeMode;
-    const isCorrect = this.activeCard.answers.some((target) => 
-      Normalizer.isMatch(rawInput, target, mode)
-    );
-
-    if (isCorrect) {
-      this.handleSuccess();
-      return true;
-    }
-
-    return false;
+    this.activeCard = candidate;
+    this.previousCardId = candidate.id;
+    this.isAwaitingErrorAdvance = false;
+    this.onCardChange(this.activeCard);
   }
 
-  /**
-   * Handles user surrendering or hitting Enter on an incorrect guess
-   * @param {string} attemptedInput
-   */
-  handleFailure(attemptedInput = "") {
-    if (!this.activeCard || this.awaitingErrorAdvance) return;
+  _rouletteSample() {
+    let totalWeight = 0;
+    for (let i = 0; i < this.pool.length; i++) {
+      totalWeight += this.pool[i].weight ?? 1.0;
+    }
 
-    this.awaitingErrorAdvance = true;
-    this.store.recordResult(this.activeCard.id, false);
+    if (totalWeight <= 0) {
+      return this.pool[Math.floor(Math.random() * this.pool.length)];
+    }
 
-    this.dispatchEvent(new CustomEvent("evaluation-failure", {
-      detail: {
-        card: this.activeCard,
-        attempted: attemptedInput,
-        expected: this.activeCard.answers.join(" / ")
+    const randomThreshold = Math.random() * totalWeight;
+    let accumulated = 0;
+
+    for (let i = 0; i < this.pool.length; i++) {
+      accumulated += this.pool[i].weight ?? 1.0;
+      if (accumulated >= randomThreshold) {
+        return this.pool[i];
       }
-    }));
-  }
+    }
 
-  handleSuccess() {
-    this.store.recordResult(this.activeCard.id, true);
-
-    this.dispatchEvent(new CustomEvent("evaluation-success", {
-      detail: { card: this.activeCard }
-    }));
-
-    // Micro-delay gives a clear flash feedback without breaking rhythm
-    setTimeout(() => {
-      this.nextCard();
-    }, 110);
+    return this.pool[this.pool.length - 1];
   }
 
   /**
-   * Dismisses the error reveal banner and moves to the next card
+   * Tests input against active card answers.
    */
-  acknowledgeError() {
-    if (this.awaitingErrorAdvance) {
-      this.nextCard();
+  evaluate(rawInput, mode = 'standard') {
+    if (!this.activeCard || this.isAwaitingErrorAdvance) return null;
+    if (!rawInput || rawInput.trim().length === 0) return null;
+
+    const answers = this.activeCard.answers || [];
+    for (const ans of answers) {
+      if (this.normalizer.isMatch(rawInput, ans, mode)) {
+        return this.activeCard;
+      }
     }
+
+    return null;
+  }
+
+  /**
+   * Enters error surrender state.
+   */
+  surrenderActiveCard() {
+    if (!this.activeCard || this.isAwaitingErrorAdvance) return;
+    this.isAwaitingErrorAdvance = true;
+    const expected = (this.activeCard.answers && this.activeCard.answers[0]) || '';
+    this.onErrorState(this.activeCard, expected);
+  }
+
+  /**
+   * Exits error surrender state and advances.
+   */
+  clearErrorAndAdvance() {
+    if (!this.isAwaitingErrorAdvance) return;
+    this.isAwaitingErrorAdvance = false;
+    this.nextCard();
   }
 }
